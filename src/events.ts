@@ -1,6 +1,6 @@
 type Listener<T extends unknown[]> = (...args: T) => void
 
-export class EventEmitter<Events extends Record<string, unknown[]>> {
+export class EventEmitter<Events extends { [K in keyof Events]: unknown[] }> {
   private listeners = new Map<keyof Events, Set<Listener<unknown[]>>>()
 
   on<K extends keyof Events>(event: K, listener: Listener<Events[K]>): void {
