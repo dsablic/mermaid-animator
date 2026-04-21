@@ -1,6 +1,6 @@
 # mermaid-animator &nbsp; [![CI](https://github.com/dsablic/mermaid-animator/actions/workflows/ci.yml/badge.svg)](https://github.com/dsablic/mermaid-animator/actions/workflows/ci.yml) [![npm](https://img.shields.io/npm/v/mermaid-animator)](https://www.npmjs.com/package/mermaid-animator) [![license](https://img.shields.io/npm/l/mermaid-animator)](./LICENSE)
 
-Animated, interactive Mermaid.js diagram viewer. Takes Mermaid code in, produces an animated SVG you can pan, zoom, and click to inspect.
+Animated, interactive Mermaid.js diagram viewer. Renders Mermaid code as a live SVG with colorized edges and glowing dots that travel along connections, plus pan, zoom, and click-to-inspect.
 
 Supports all Mermaid diagram types: flowcharts, sequence diagrams, class diagrams, state diagrams, ER diagrams, and more.
 
@@ -11,12 +11,12 @@ Supports all Mermaid diagram types: flowcharts, sequence diagrams, class diagram
 
 ## Features
 
-- Animated rendering -- nodes fade/scale in, edges draw progressively, staggered by graph order
-- Auto-play and stepped (presentation) modes
+- Colorized edges with glowing dots that travel along all connections simultaneously
+- Each edge gets a distinct color from a vibrant palette (cyan, purple, pink, orange, yellow, emerald, blue, red, violet, teal)
 - Pan and zoom via mouse/touch, with keyboard shortcuts
 - Click any node to highlight its connections and see a detail popover
+- GIF export with traveling dot animation (separate entry point, keeps main bundle small)
 - Works with all Mermaid diagram types
-- Zero dependencies beyond Mermaid.js
 - Ships as ESM and UMD, with TypeScript declarations
 
 ## Installation
@@ -57,7 +57,7 @@ const animator = await MermaidAnimator.create(container, code, {
   inspect: true,       // enable click-to-inspect
   minZoom: 0.1,
   maxZoom: 5,
-  mermaid: { theme: 'default' }  // passed to mermaid.initialize()
+  mermaid: { theme: 'dark' }  // passed to mermaid.initialize()
 })
 ```
 
@@ -84,7 +84,7 @@ animator.on('step', (index, total) => {})
 
 ### GIF Export
 
-Export animated diagrams as GIF files. Available as a separate import to keep the main bundle small.
+Export animated diagrams as GIF files with traveling dots. Available as a separate import to keep the main bundle small.
 
 ```js
 import { exportGif } from 'mermaid-animator/export'
@@ -96,7 +96,8 @@ const gifBytes = await exportGif(`graph TD
   C --> D`, {
   width: 800,
   height: 600,
-  fps: 10
+  background: '#1a1a2e',
+  mermaid: { theme: 'dark' }
 })
 
 // Download
@@ -112,12 +113,14 @@ a.click()
 
 | Option | Default | Description |
 |--------|---------|-------------|
-| `width` | 800 | GIF width in pixels |
-| `height` | 600 | GIF height in pixels |
-| `fps` | 10 | Frames per second |
-| `stagger` | 80 | ms between groups appearing |
-| `holdFirstFrame` | 500 | ms to hold the initial frame |
-| `holdLastFrame` | 1500 | ms to hold the final complete frame |
+| `width` | 800 | Max GIF width in pixels (aspect ratio preserved) |
+| `height` | 600 | Max GIF height in pixels (aspect ratio preserved) |
+| `fps` | 12 | Frames per second |
+| `totalFrames` | 60 | Total animation frames (controls loop duration) |
+| `dotsPerEdge` | 3 | Number of dots traveling per edge |
+| `dotRadius` | 3 | Dot radius in SVG units |
+| `edgeColors` | vibrant palette | Array of hex colors for edges |
+| `background` | `'#fff'` | Background color |
 | `mermaid` | `{ theme: 'default' }` | Mermaid configuration |
 
 ### Keyboard Shortcuts
@@ -147,9 +150,10 @@ a.click()
 git clone https://github.com/dsablic/mermaid-animator.git
 cd mermaid-animator
 npm install --ignore-scripts=false
-npm test              # run tests
-npm run build         # build ESM bundle
-npm run dev           # serve demo at localhost:3000/demo/
+npm test                    # run tests
+npm run build:all           # build ESM + UMD + export + types
+npm run dev                 # serve demo at localhost:3000/demo/
+npm run generate-examples   # regenerate example GIFs
 ```
 
 ## License
