@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mermaid Animator - Demo</title>
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+      background: #0a0a1a;
+      color: #e0e0e0;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 20px;
+      background: #08081a;
+      border-bottom: 1px solid #1a1a3a;
+      height: 48px;
+    }
+
+    header h1 {
+      font-size: 15px;
+      font-weight: 600;
+      color: #c0c0e0;
+      letter-spacing: 0.02em;
+    }
+
+    header span {
+      font-size: 12px;
+      color: #666;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 40fr 60fr;
+      height: calc(100vh - 48px);
+    }
+
+    /* --- Left Pane --- */
+
+    .left-pane {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      padding: 16px;
+      background: #12122a;
+      border-right: 1px solid #1a1a3a;
+      overflow: hidden;
+    }
+
+    .left-pane label {
+      font-size: 12px;
+      font-weight: 500;
+      color: #999;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    select {
+      appearance: none;
+      background: #1a1a3a;
+      color: #e0e0e0;
+      border: 1px solid #2a2a4a;
+      border-radius: 6px;
+      padding: 8px 12px;
+      font-size: 13px;
+      font-family: inherit;
+      cursor: pointer;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    select:hover {
+      border-color: #3a3a5a;
+    }
+
+    select:focus {
+      border-color: #7c9aff;
+    }
+
+    textarea {
+      flex: 1;
+      background: #0e0e22;
+      color: #d0d0e0;
+      border: 1px solid #2a2a4a;
+      border-radius: 6px;
+      padding: 12px;
+      font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', Consolas, monospace;
+      font-size: 13px;
+      line-height: 1.5;
+      resize: none;
+      outline: none;
+      transition: border-color 0.15s;
+      tab-size: 2;
+    }
+
+    textarea:focus {
+      border-color: #7c9aff;
+    }
+
+    .controls-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .btn {
+      background: #1a1a3a;
+      color: #d0d0e0;
+      border: 1px solid #2a2a4a;
+      border-radius: 6px;
+      padding: 7px 16px;
+      font-size: 13px;
+      font-family: inherit;
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s;
+      white-space: nowrap;
+      user-select: none;
+    }
+
+    .btn:hover {
+      background: #24244a;
+      border-color: #3a3a5a;
+    }
+
+    .btn:active {
+      background: #2e2e5a;
+    }
+
+    .btn:disabled {
+      opacity: 0.35;
+      cursor: default;
+      pointer-events: none;
+    }
+
+    .btn-primary {
+      background: #2a3a6a;
+      border-color: #3a4a8a;
+      color: #b0c0ff;
+    }
+
+    .btn-primary:hover {
+      background: #344a7a;
+      border-color: #4a5a9a;
+    }
+
+    .btn-active {
+      background: #2a3a6a;
+      border-color: #7c9aff;
+      color: #b0c0ff;
+    }
+
+    .autorun-label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      color: #999;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .autorun-label input[type="checkbox"] {
+      accent-color: #7c9aff;
+      cursor: pointer;
+    }
+
+    /* --- Right Pane --- */
+
+    .right-pane {
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .diagram-container {
+      flex: 1;
+      overflow: hidden;
+      position: relative;
+      background: #0a0a1a;
+    }
+
+    .diagram-container svg {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+
+    .placeholder {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      color: #444;
+      font-size: 14px;
+    }
+
+    .error-message {
+      padding: 16px;
+      color: #ff6b6b;
+      font-size: 13px;
+      font-family: 'SF Mono', 'Fira Code', Consolas, monospace;
+      white-space: pre-wrap;
+      overflow-y: auto;
+      max-height: 160px;
+      background: #1a0a0a;
+      border-top: 1px solid #3a1a1a;
+    }
+
+    /* --- Toolbar --- */
+
+    .toolbar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 16px;
+      background: #0e0e22;
+      border-top: 1px solid #1a1a3a;
+      flex-wrap: wrap;
+    }
+
+    .toolbar .separator {
+      width: 1px;
+      height: 22px;
+      background: #2a2a4a;
+      margin: 0 4px;
+    }
+
+    .step-counter {
+      font-size: 13px;
+      color: #888;
+      min-width: 56px;
+      text-align: center;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .toolbar .btn {
+      padding: 5px 12px;
+      font-size: 12px;
+    }
+
+    .mode-label {
+      font-size: 12px;
+      color: #666;
+      margin-left: auto;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>Mermaid Animator</h1>
+  <span>Interactive demo</span>
+</header>
+
+<div class="layout">
+
+  <!-- Left Pane: Editor -->
+  <div class="left-pane">
+    <label for="examples">Example diagram</label>
+    <select id="examples">
+      <option value="flowchart">Flowchart</option>
+      <option value="sequence">Sequence Diagram</option>
+      <option value="class">Class Diagram</option>
+      <option value="state">State Diagram</option>
+      <option value="er">ER Diagram</option>
+    </select>
+
+    <label for="editor">Mermaid code</label>
+    <textarea id="editor" spellcheck="false"></textarea>
+
+    <div class="controls-row">
+      <button id="run-btn" class="btn btn-primary">Run</button>
+      <label class="autorun-label">
+        <input type="checkbox" id="autorun" checked>
+        Auto-run
+      </label>
+    </div>
+  </div>
+
+  <!-- Right Pane: Output -->
+  <div class="right-pane">
+    <div id="diagram" class="diagram-container">
+      <div class="placeholder">Select an example or write Mermaid code, then click Run.</div>
+    </div>
+    <div id="error" class="error-message" style="display: none;"></div>
+
+    <div class="toolbar">
+      <button id="play-btn" class="btn">Play / Replay</button>
+      <div class="separator"></div>
+      <button id="prev-btn" class="btn" disabled>Prev</button>
+      <span id="step-counter" class="step-counter">-- / --</span>
+      <button id="next-btn" class="btn" disabled>Next</button>
+      <div class="separator"></div>
+      <button id="fit-btn" class="btn">Fit</button>
+      <span class="mode-label">Mode:</span>
+      <button id="mode-btn" class="btn">Auto</button>
+    </div>
+  </div>
+
+</div>
+
+<script type="importmap">
+{
+  "imports": {
+    "mermaid": "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs"
+  }
+}
+</script>
+
+<script type="module">
+  import { MermaidAnimator } from '../dist/mermaid-animator.js';
+
+  // ---- Example diagrams ----
+
+  const EXAMPLES = {
+    flowchart: `graph TD
+    Start([Start]) --> Validate[Validate Input]
+    Validate --> Decision{Valid?}
+    Decision -->|Yes| Process[Process Data]
+    Decision -->|No| Error[Show Error]
+    Error --> Validate
+    Process --> Store[(Store Results)]
+
+    subgraph Pipeline
+      Process
+      Store
+    end
+
+    Store --> Notify[Send Notification]
+    Notify --> End([End])`,
+
+    sequence: `sequenceDiagram
+    participant Client
+    participant Server
+    participant Database
+
+    Client->>Server: POST /api/login
+    Server->>Database: Query user record
+    Database-->>Server: User data
+    Server->>Server: Validate credentials
+    alt Valid credentials
+        Server-->>Client: 200 OK + token
+        Client->>Server: GET /api/profile
+        Server->>Database: Fetch profile
+        Database-->>Server: Profile data
+        Server-->>Client: 200 OK + profile
+    else Invalid credentials
+        Server-->>Client: 401 Unauthorized
+    end`,
+
+    class: `classDiagram
+    class Animal {
+        +String name
+        +int age
+        +makeSound() void
+        +move() void
+    }
+    class Dog {
+        +String breed
+        +fetch() void
+        +makeSound() void
+    }
+    class Cat {
+        +bool indoor
+        +purr() void
+        +makeSound() void
+    }
+
+    Animal <|-- Dog
+    Animal <|-- Cat
+    Dog --> Cat : chases`,
+
+    state: `stateDiagram-v2
+    [*] --> Idle
+    Idle --> Loading : fetch
+    Loading --> Success : resolve
+    Loading --> Error : reject
+    Error --> Loading : retry
+    Error --> Idle : cancel
+    Success --> Idle : reset
+    Success --> [*]
+
+    state Loading {
+        [*] --> Pending
+        Pending --> Parsing
+    }`,
+
+    er: `erDiagram
+    CUSTOMER ||--o{ ORDER : places
+    CUSTOMER {
+        int id PK
+        string name
+        string email
+    }
+    ORDER ||--|{ LINE_ITEM : contains
+    ORDER {
+        int id PK
+        date created
+        string status
+    }
+    PRODUCT ||--o{ LINE_ITEM : "appears in"
+    PRODUCT {
+        int id PK
+        string name
+        float price
+    }
+    LINE_ITEM {
+        int quantity
+        float subtotal
+    }`
+  };
+
+  // ---- DOM refs ----
+
+  const examplesSelect = document.getElementById('examples');
+  const editor = document.getElementById('editor');
+  const runBtn = document.getElementById('run-btn');
+  const autorunCheckbox = document.getElementById('autorun');
+  const diagramEl = document.getElementById('diagram');
+  const errorEl = document.getElementById('error');
+  const playBtn = document.getElementById('play-btn');
+  const prevBtn = document.getElementById('prev-btn');
+  const nextBtn = document.getElementById('next-btn');
+  const stepCounter = document.getElementById('step-counter');
+  const fitBtn = document.getElementById('fit-btn');
+  const modeBtn = document.getElementById('mode-btn');
+
+  // ---- State ----
+
+  let animator = null;
+  let currentMode = 'auto';
+  let debounceTimer = null;
+  let totalSteps = 0;
+
+  // ---- Helpers ----
+
+  // Stop keyboard events from the textarea from reaching the library's
+  // global keyboard handler (which captures Space, Enter, arrows, etc.)
+  editor.addEventListener('keydown', (e) => e.stopPropagation());
+
+  function showError(msg) {
+    errorEl.textContent = msg;
+    errorEl.style.display = 'block';
+  }
+
+  function clearError() {
+    errorEl.style.display = 'none';
+    errorEl.textContent = '';
+  }
+
+  function updateStepCounter(current, total) {
+    totalSteps = total;
+    stepCounter.textContent = `${current} / ${total}`;
+  }
+
+  function resetStepCounter() {
+    totalSteps = 0;
+    stepCounter.textContent = '-- / --';
+  }
+
+  function updateSteppedControls(enabled) {
+    prevBtn.disabled = !enabled;
+    nextBtn.disabled = !enabled;
+  }
+
+  // ---- Core: create / update animator ----
+
+  async function runDiagram(code) {
+    if (!code.trim()) return;
+    clearError();
+
+    // Remove placeholder if present
+    const placeholder = diagramEl.querySelector('.placeholder');
+    if (placeholder) placeholder.remove();
+
+    try {
+      if (animator) {
+        animator.destroy();
+        animator = null;
+      }
+
+      animator = await MermaidAnimator.create(diagramEl, code.trim(), {
+        mode: currentMode,
+        mermaid: { theme: 'dark' }
+      });
+
+      // Listen for step events (emitted by next() and prev())
+      animator.on('step', (index, total) => {
+        updateStepCounter(index, total);
+      });
+
+      updateSteppedControls(currentMode === 'stepped');
+
+      if (currentMode === 'stepped') {
+        // Discover total steps by calling next() then prev().
+        // next() reveals step 1 and emits 'step' with (1, total),
+        // then prev() hides it and emits 'step' with (0, total).
+        animator.next();
+        animator.prev();
+      } else {
+        resetStepCounter();
+      }
+    } catch (err) {
+      showError(String(err.message || err));
+    }
+  }
+
+  // ---- Example dropdown ----
+
+  function loadExample(name) {
+    const code = EXAMPLES[name];
+    if (code) {
+      editor.value = code;
+      if (autorunCheckbox.checked) {
+        runDiagram(code);
+      }
+    }
+  }
+
+  examplesSelect.addEventListener('change', () => {
+    loadExample(examplesSelect.value);
+  });
+
+  // ---- Run button ----
+
+  runBtn.addEventListener('click', () => {
+    runDiagram(editor.value);
+  });
+
+  // ---- Auto-run with debounce ----
+
+  editor.addEventListener('input', () => {
+    if (!autorunCheckbox.checked) return;
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(() => {
+      runDiagram(editor.value);
+    }, 500);
+  });
+
+  // ---- Toolbar: Play / Replay ----
+
+  playBtn.addEventListener('click', async () => {
+    if (!animator) {
+      await runDiagram(editor.value);
+      return;
+    }
+    if (currentMode === 'stepped') {
+      // Re-render to reset steps
+      await runDiagram(editor.value);
+    } else {
+      await animator.replay();
+    }
+  });
+
+  // ---- Toolbar: Prev / Next ----
+
+  prevBtn.addEventListener('click', () => {
+    if (animator && currentMode === 'stepped') {
+      animator.prev();
+    }
+  });
+
+  nextBtn.addEventListener('click', () => {
+    if (animator && currentMode === 'stepped') {
+      animator.next();
+    }
+  });
+
+  // ---- Toolbar: Fit to view ----
+
+  fitBtn.addEventListener('click', () => {
+    if (animator) {
+      animator.fitToView();
+    }
+  });
+
+  // ---- Toolbar: Mode toggle ----
+
+  modeBtn.addEventListener('click', async () => {
+    if (currentMode === 'auto') {
+      currentMode = 'stepped';
+      modeBtn.textContent = 'Stepped';
+      modeBtn.classList.add('btn-active');
+      updateSteppedControls(true);
+    } else {
+      currentMode = 'auto';
+      modeBtn.textContent = 'Auto';
+      modeBtn.classList.remove('btn-active');
+      updateSteppedControls(false);
+      resetStepCounter();
+    }
+
+    // Re-create animator with new mode
+    if (editor.value.trim()) {
+      await runDiagram(editor.value);
+    }
+  });
+
+  // ---- Initialize ----
+
+  loadExample('flowchart');
+</script>
+
+</body>
+</html>
