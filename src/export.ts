@@ -3,7 +3,7 @@ import { discoverElements } from './discovery.js'
 import { renderSvgToImageData } from './capture.js'
 import { encodeGif } from './gif-encoder.js'
 import type { FrameData } from './gif-encoder.js'
-import { collectEdgeGeometries, EDGE_COLORS } from './dots.js'
+import { collectEdgeGeometries, styleNodes, EDGE_COLORS } from './dots.js'
 
 export interface GifExportOptions {
   width?: number
@@ -66,6 +66,7 @@ export async function exportGif(
     svgEl.setAttribute('height', String(outHeight))
 
     const model = discoverElements(svgEl)
+    styleNodes(model, edgeColors)
     const geometries = collectEdgeGeometries(model, edgeColors)
 
     const dotGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g')

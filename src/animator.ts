@@ -1,6 +1,6 @@
 import type { GraphElement, GraphModel, MermaidAnimatorOptions } from './types.js'
 import { topologicalOrder, groupByLevel } from './ordering.js'
-import { collectEdgeGeometries } from './dots.js'
+import { collectEdgeGeometries, styleNodes } from './dots.js'
 
 export interface AnimationSequence {
   play(): Promise<void>
@@ -21,6 +21,7 @@ export function buildSequence(model: GraphModel, options: MermaidAnimatorOptions
     frame = 0
 
     const svgEl = model.svgElement
+    styleNodes(model)
     const geometries = collectEdgeGeometries(model)
 
     if (dotGroup) dotGroup.remove()

@@ -65,6 +65,64 @@ export function colorizeEdge(edge: GraphElement, color: string): void {
   }
 }
 
+function hexToMuted(hex: string): string {
+  const r = parseInt(hex.slice(1, 3), 16)
+  const g = parseInt(hex.slice(3, 5), 16)
+  const b = parseInt(hex.slice(5, 7), 16)
+  const mute = (v: number) => Math.round(v * 0.3)
+  return `#${mute(r).toString(16).padStart(2, '0')}${mute(g).toString(16).padStart(2, '0')}${mute(b).toString(16).padStart(2, '0')}`
+}
+
+function isNodeInsideCluster(node: GraphElement, cluster: GraphElement): boolean {
+  let current: Element | null = node.el.parentElement
+  while (current && current instanceof SVGElement && current.tagName !== 'svg') {
+    if (current === cluster.el) return true
+    current = current.parentElement
+  }
+  return false
+}
+
+export function styleNodes(model: GraphModel, colors: string[] = EDGE_COLORS): void {
+  const clusterColors = new Map<GraphElement, string>()
+  for (let i = 0; i < model.clusters.length; i++) {
+    clusterColors.set(model.clusters[i], colors[i % colors.length])
+  }
+
+  for (const [cluster, color] of clusterColors) {
+    const rect = cluster.el.querySelector('rect')
+    if (rect) {
+      rect.setAttribute('rx', '8')
+      rect.setAttribute('ry', '8')
+      rect.style.stroke = color
+      rect.style.strokeWidth = '1.5'
+      rect.style.fill = hexToMuted(color)
+      rect.style.fillOpacity = '0.15'
+    }
+  }
+
+  for (const node of model.nodes) {
+    let nodeColor = '#8b8fa3'
+    for (const [cluster, color] of clusterColors) {
+      if (isNodeInsideCluster(node, cluster)) {
+        nodeColor = color
+        break
+      }
+    }
+
+    const shapes = node.el.querySelectorAll('rect, circle, ellipse, polygon')
+    for (const shape of shapes) {
+      const s = shape as SVGElement
+      if (shape.tagName === 'rect') {
+        shape.setAttribute('rx', '6')
+        shape.setAttribute('ry', '6')
+      }
+      s.style.stroke = nodeColor
+      s.style.strokeWidth = '1.5'
+      s.style.fillOpacity = '0.25'
+    }
+  }
+}
+
 export function collectEdgeGeometries(model: GraphModel, colors: string[] = EDGE_COLORS): EdgeGeometry[] {
   const geometries: EdgeGeometry[] = []
   let index = 0
