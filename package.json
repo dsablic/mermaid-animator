@@ -1,7 +1,24 @@
 {
   "name": "mermaid-animator",
   "version": "0.1.0",
+  "description": "Animated, interactive Mermaid.js diagram viewer with pan, zoom, and click-to-inspect",
   "type": "module",
+  "license": "MIT",
+  "author": "Denis Sablic <denis.sablic@gmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dsablic/mermaid-animator.git"
+  },
+  "keywords": [
+    "mermaid",
+    "diagram",
+    "animation",
+    "interactive",
+    "svg",
+    "flowchart",
+    "sequence-diagram",
+    "viewer"
+  ],
   "main": "dist/mermaid-animator.js",
   "exports": {
     ".": "./dist/mermaid-animator.js"
