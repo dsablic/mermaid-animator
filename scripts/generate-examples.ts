@@ -88,30 +88,34 @@ async function main() {
   const page = await browser.newPage()
   await page.setViewport({ width: 1200, height: 800 })
 
-  const themeName = process.argv[2] || 'dark'
+  const themes = process.argv[2] ? [process.argv[2]] : ['dark', 'light']
 
-  for (const [name, code] of Object.entries(DIAGRAMS)) {
-    process.stdout.write(`Generating ${name}.gif (${themeName})...`)
+  for (const themeName of themes) {
+    for (const [name, code] of Object.entries(DIAGRAMS)) {
+      const suffix = themes.length > 1 ? `-${themeName}` : ''
+      const filename = `${name}${suffix}.gif`
+      process.stdout.write(`Generating ${filename}...`)
 
-    await page.goto(`http://localhost:${port}/demo/index.html`, { waitUntil: 'networkidle0' })
+      await page.goto(`http://localhost:${port}/demo/index.html`, { waitUntil: 'networkidle0' })
 
-    const gifBytes = await page.evaluate(async (mermaidCode: string, theme: string) => {
-      const { exportGif } = await import('../dist/mermaid-animator-export.js')
-      const bytes = await exportGif(mermaidCode, {
-        width: 800,
-        height: 600,
-        fps: 12,
-        theme
-      })
-      return Array.from(bytes as Uint8Array)
-    }, code, themeName)
+      const gifBytes = await page.evaluate(async (mermaidCode: string, theme: string) => {
+        const { exportGif } = await import('../dist/mermaid-animator-export.js')
+        const bytes = await exportGif(mermaidCode, {
+          width: 800,
+          height: 600,
+          fps: 12,
+          theme
+        })
+        return Array.from(bytes as Uint8Array)
+      }, code, themeName)
 
-    await writeFile(
-      join(rootDir, 'examples', `${name}.gif`),
-      Buffer.from(gifBytes)
-    )
+      await writeFile(
+        join(rootDir, 'examples', filename),
+        Buffer.from(gifBytes)
+      )
 
-    process.stdout.write(` done\n`)
+      process.stdout.write(` done\n`)
+    }
   }
 
   await browser.close()

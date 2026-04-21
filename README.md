@@ -5,14 +5,16 @@ Animated, interactive Mermaid.js diagram viewer. Renders Mermaid code as a live 
 Supports all Mermaid diagram types: flowcharts, sequence diagrams, class diagrams, state diagrams, ER diagrams, and more.
 
 <p align="center">
-  <img src="examples/flowchart.gif" alt="Flowchart animation" width="400"/>
-  <img src="examples/sequence.gif" alt="Sequence diagram animation" width="400"/>
+  <img src="examples/flowchart-dark.gif" alt="Flowchart (dark theme)" width="400"/>
+  <img src="examples/flowchart-light.gif" alt="Flowchart (light theme)" width="400"/>
 </p>
 
 ## Features
 
 - Colorized edges with glowing dots that travel along all connections simultaneously
-- Each edge gets a distinct color from a vibrant palette (cyan, purple, pink, orange, yellow, emerald, blue, red, violet, teal)
+- Each edge gets a distinct color from a vibrant palette
+- Rounded nodes with cluster-colored borders
+- Dark and light themes built in, with full custom theme support
 - Pan and zoom via mouse/touch, with keyboard shortcuts
 - Click any node to highlight its connections and see a detail popover
 - GIF export with traveling dot animation (separate entry point, keeps main bundle small)
@@ -48,17 +50,53 @@ npm install mermaid-animator mermaid
 
 ```js
 const animator = await MermaidAnimator.create(container, code, {
+  theme: 'dark',       // 'dark', 'light', or a custom Theme object
   mode: 'auto',        // 'auto' or 'stepped'
-  stagger: 80,         // ms between element animations
-  duration: 300,       // ms per animation
-  easing: 'ease-out',  // CSS easing
+  stagger: 80,         // ms between element animations (stepped mode)
+  duration: 300,       // ms per animation (stepped mode)
+  easing: 'ease-out',  // CSS easing (stepped mode)
   pan: true,           // enable pan
   zoom: true,          // enable zoom
   inspect: true,       // enable click-to-inspect
   minZoom: 0.1,
   maxZoom: 5,
-  mermaid: { theme: 'dark' }  // passed to mermaid.initialize()
+  mermaid: {}          // extra options passed to mermaid.initialize()
 })
+```
+
+### Themes
+
+Built-in themes: `'dark'` (default) and `'light'`.
+
+```js
+// Dark theme (default)
+MermaidAnimator.create(container, code, { theme: 'dark' })
+
+// Light theme
+MermaidAnimator.create(container, code, { theme: 'light' })
+
+// Custom theme
+MermaidAnimator.create(container, code, {
+  theme: {
+    name: 'midnight',
+    background: '#0f172a',
+    mermaidTheme: 'dark',
+    edgeColors: ['#38bdf8', '#c084fc', '#fb7185', '#fbbf24'],
+    dotGlowOpacity: 0.35,
+    nodeStrokeWidth: 2,
+    nodeFillOpacity: 0.2,
+    nodeBorderDefault: '#475569',
+    clusterStrokeWidth: 1.5,
+    clusterFillOpacity: 0.1,
+    clusterBorderOpacity: 0.8,
+  }
+})
+```
+
+The `Theme` type is exported for TypeScript users:
+
+```ts
+import type { Theme } from 'mermaid-animator'
 ```
 
 ### Methods
@@ -94,10 +132,7 @@ const gifBytes = await exportGif(`graph TD
   B -->|Yes| C[Process]
   B -->|No| D[End]
   C --> D`, {
-  width: 800,
-  height: 600,
-  background: '#1a1a2e',
-  mermaid: { theme: 'dark' }
+  theme: 'dark'
 })
 
 // Download
@@ -113,15 +148,15 @@ a.click()
 
 | Option | Default | Description |
 |--------|---------|-------------|
+| `theme` | `'dark'` | `'dark'`, `'light'`, or a custom `Theme` object |
 | `width` | 800 | Max GIF width in pixels (aspect ratio preserved) |
 | `height` | 600 | Max GIF height in pixels (aspect ratio preserved) |
 | `fps` | 12 | Frames per second |
 | `totalFrames` | 60 | Total animation frames (controls loop duration) |
 | `dotsPerEdge` | 3 | Number of dots traveling per edge |
 | `dotRadius` | 3 | Dot radius in SVG units |
-| `edgeColors` | vibrant palette | Array of hex colors for edges |
-| `background` | `'#fff'` | Background color |
-| `mermaid` | `{ theme: 'default' }` | Mermaid configuration |
+| `background` | from theme | Background color (overrides theme) |
+| `mermaid` | `{}` | Extra options passed to mermaid.initialize() |
 
 ### Keyboard Shortcuts
 
