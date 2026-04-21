@@ -1,0 +1,32 @@
+{
+  "name": "mermaid-animator",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "dist/mermaid-animator.js",
+  "exports": {
+    ".": "./dist/mermaid-animator.js"
+  },
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "esbuild src/index.ts --bundle --format=esm --outfile=dist/mermaid-animator.js --external:mermaid",
+    "build:umd": "esbuild src/index.ts --bundle --format=iife --global-name=MermaidAnimator --outfile=dist/mermaid-animator.umd.js --external:mermaid",
+    "build:all": "npm run build && npm run build:umd && tsc --emitDeclarationOnly",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "dev": "npx serve ."
+  },
+  "peerDependencies": {
+    "mermaid": ">=10.0.0"
+  },
+  "devDependencies": {
+    "@types/jsdom": "28.0.1",
+    "esbuild": "0.28.0",
+    "jsdom": "29.0.2",
+    "mermaid": "11.14.0",
+    "typescript": "6.0.3",
+    "vitest": "4.1.4"
+  }
+}
