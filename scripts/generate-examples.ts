@@ -42,10 +42,7 @@ const DIAGRAMS: Record<string, string> = {
     end`
 }
 
-const THEMES = {
-  dark: { background: '#1a1a2e', mermaid: { theme: 'dark' } },
-  light: { background: '#ffffff', mermaid: { theme: 'default' } }
-}
+const THEME_NAMES = ['dark', 'light'] as const
 
 const MIME_TYPES: Record<string, string> = {
   '.html': 'text/html',
@@ -92,28 +89,22 @@ async function main() {
   await page.setViewport({ width: 1200, height: 800 })
 
   const themeName = process.argv[2] || 'dark'
-  const theme = THEMES[themeName as keyof typeof THEMES] ?? THEMES.dark
 
   for (const [name, code] of Object.entries(DIAGRAMS)) {
     process.stdout.write(`Generating ${name}.gif (${themeName})...`)
 
     await page.goto(`http://localhost:${port}/demo/index.html`, { waitUntil: 'networkidle0' })
 
-    const gifBytes = await page.evaluate(async (mermaidCode: string, bg: string, mermaidOpts: Record<string, unknown>) => {
+    const gifBytes = await page.evaluate(async (mermaidCode: string, theme: string) => {
       const { exportGif } = await import('../dist/mermaid-animator-export.js')
       const bytes = await exportGif(mermaidCode, {
         width: 800,
         height: 600,
         fps: 12,
-        stagger: 100,
-        fadeSteps: 3,
-        holdFirstFrame: 300,
-        holdLastFrame: 2000,
-        background: bg,
-        mermaid: mermaidOpts
+        theme
       })
       return Array.from(bytes as Uint8Array)
-    }, code, theme.background, theme.mermaid)
+    }, code, themeName)
 
     await writeFile(
       join(rootDir, 'examples', `${name}.gif`),

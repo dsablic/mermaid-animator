@@ -1,17 +1,6 @@
 import type { GraphElement, GraphModel } from './types.js'
-
-export const EDGE_COLORS = [
-  '#06b6d4',
-  '#a855f7',
-  '#f472b6',
-  '#fb923c',
-  '#facc15',
-  '#34d399',
-  '#60a5fa',
-  '#f87171',
-  '#c084fc',
-  '#2dd4bf',
-]
+import type { Theme } from './themes.js'
+import { darkTheme } from './themes.js'
 
 export interface EdgeGeometry {
   edge: GraphElement
@@ -49,6 +38,14 @@ export function hexToGlow(hex: string): string {
   return `#${lighten(r).toString(16).padStart(2, '0')}${lighten(g).toString(16).padStart(2, '0')}${lighten(b).toString(16).padStart(2, '0')}`
 }
 
+function hexToMuted(hex: string): string {
+  const r = parseInt(hex.slice(1, 3), 16)
+  const g = parseInt(hex.slice(3, 5), 16)
+  const b = parseInt(hex.slice(5, 7), 16)
+  const mute = (v: number) => Math.round(v * 0.3)
+  return `#${mute(r).toString(16).padStart(2, '0')}${mute(g).toString(16).padStart(2, '0')}${mute(b).toString(16).padStart(2, '0')}`
+}
+
 export function colorizeEdge(edge: GraphElement, color: string): void {
   const paths = edge.el.querySelectorAll?.('path') ?? []
   const lines = edge.el.querySelectorAll?.('line') ?? []
@@ -65,14 +62,6 @@ export function colorizeEdge(edge: GraphElement, color: string): void {
   }
 }
 
-function hexToMuted(hex: string): string {
-  const r = parseInt(hex.slice(1, 3), 16)
-  const g = parseInt(hex.slice(3, 5), 16)
-  const b = parseInt(hex.slice(5, 7), 16)
-  const mute = (v: number) => Math.round(v * 0.3)
-  return `#${mute(r).toString(16).padStart(2, '0')}${mute(g).toString(16).padStart(2, '0')}${mute(b).toString(16).padStart(2, '0')}`
-}
-
 function isNodeInsideCluster(node: GraphElement, cluster: GraphElement): boolean {
   let current: Element | null = node.el.parentElement
   while (current && current instanceof SVGElement && current.tagName !== 'svg') {
@@ -82,7 +71,8 @@ function isNodeInsideCluster(node: GraphElement, cluster: GraphElement): boolean
   return false
 }
 
-export function styleNodes(model: GraphModel, colors: string[] = EDGE_COLORS): void {
+export function styleNodes(model: GraphModel, theme: Theme = darkTheme): void {
+  const colors = theme.edgeColors
   const clusterColors = new Map<GraphElement, string>()
   for (let i = 0; i < model.clusters.length; i++) {
     clusterColors.set(model.clusters[i], colors[i % colors.length])
@@ -94,14 +84,15 @@ export function styleNodes(model: GraphModel, colors: string[] = EDGE_COLORS): v
       rect.setAttribute('rx', '8')
       rect.setAttribute('ry', '8')
       rect.style.stroke = color
-      rect.style.strokeWidth = '1.5'
+      rect.style.strokeOpacity = String(theme.clusterBorderOpacity)
+      rect.style.strokeWidth = String(theme.clusterStrokeWidth)
       rect.style.fill = hexToMuted(color)
-      rect.style.fillOpacity = '0.15'
+      rect.style.fillOpacity = String(theme.clusterFillOpacity)
     }
   }
 
   for (const node of model.nodes) {
-    let nodeColor = '#8b8fa3'
+    let nodeColor = theme.nodeBorderDefault
     for (const [cluster, color] of clusterColors) {
       if (isNodeInsideCluster(node, cluster)) {
         nodeColor = color
@@ -117,14 +108,15 @@ export function styleNodes(model: GraphModel, colors: string[] = EDGE_COLORS): v
         shape.setAttribute('ry', '6')
       }
       s.style.stroke = nodeColor
-      s.style.strokeWidth = '1.5'
-      s.style.fillOpacity = '0.25'
+      s.style.strokeWidth = String(theme.nodeStrokeWidth)
+      s.style.fillOpacity = String(theme.nodeFillOpacity)
     }
   }
 }
 
-export function collectEdgeGeometries(model: GraphModel, colors: string[] = EDGE_COLORS): EdgeGeometry[] {
+export function collectEdgeGeometries(model: GraphModel, theme: Theme = darkTheme): EdgeGeometry[] {
   const geometries: EdgeGeometry[] = []
+  const colors = theme.edgeColors
   let index = 0
 
   for (const edge of model.edges) {

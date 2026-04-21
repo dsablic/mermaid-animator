@@ -604,8 +604,7 @@
       const gifBytes = await exportGif(code, {
         width: diagramEl.clientWidth || 800,
         height: diagramEl.clientHeight || 600,
-        background: '#0e0e22',
-        mermaid: { theme: 'dark' }
+        theme: 'dark'
       });
 
       const blob = new Blob([gifBytes], { type: 'image/gif' });

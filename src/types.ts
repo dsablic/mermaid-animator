@@ -1,5 +1,7 @@
 export type AnimationMode = 'auto' | 'stepped'
 
+import type { Theme } from './themes.js'
+
 export interface MermaidAnimatorOptions {
   mode: AnimationMode
   stagger: number
@@ -10,6 +12,7 @@ export interface MermaidAnimatorOptions {
   inspect: boolean
   minZoom: number
   maxZoom: number
+  theme: string | Theme
   mermaid: Record<string, unknown>
 }
 
@@ -25,7 +28,8 @@ export const DEFAULT_OPTIONS: MermaidAnimatorOptions = {
   inspect: true,
   minZoom: 0.1,
   maxZoom: 5,
-  mermaid: { theme: 'default' }
+  theme: 'dark',
+  mermaid: {}
 }
 
 export type ElementCategory = 'cluster' | 'node' | 'edge' | 'label'

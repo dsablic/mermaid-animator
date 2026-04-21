@@ -8,6 +8,8 @@ import { PanZoomHandler } from './pan-zoom.js'
 import { InspectHandler } from './inspect.js'
 import { KeyboardHandler } from './keyboard.js'
 import { injectStyles } from './styles.js'
+import { resolveTheme } from './themes.js'
+export type { Theme } from './themes.js'
 
 export type { PartialOptions, MermaidAnimatorOptions, GraphModel, GraphElement, AnimatorEvents }
 
@@ -44,8 +46,10 @@ export class MermaidAnimator {
 
     this.container.classList.add('ma-container')
 
+    const theme = resolveTheme(this.options.theme)
     mermaid.initialize({
       startOnLoad: false,
+      theme: theme.mermaidTheme as 'dark' | 'default',
       ...this.options.mermaid
     })
 
@@ -64,7 +68,7 @@ export class MermaidAnimator {
     this.model = discoverElements(svgEl)
     this.buildConnections()
 
-    this.sequence = buildSequence(this.model, this.options)
+    this.sequence = buildSequence(this.model, this.options, theme)
 
     if (this.options.pan || this.options.zoom) {
       this.panZoom = new PanZoomHandler(this.container, svgEl, this.options)

@@ -1,9 +1,13 @@
 import mermaid from 'mermaid'
+import type { Theme } from './themes.js'
+import { resolveTheme, darkTheme } from './themes.js'
 import { discoverElements } from './discovery.js'
 import { renderSvgToImageData } from './capture.js'
 import { encodeGif } from './gif-encoder.js'
 import type { FrameData } from './gif-encoder.js'
-import { collectEdgeGeometries, styleNodes, EDGE_COLORS } from './dots.js'
+import { collectEdgeGeometries, styleNodes } from './dots.js'
+
+export type { Theme }
 
 export interface GifExportOptions {
   width?: number
@@ -12,7 +16,7 @@ export interface GifExportOptions {
   totalFrames?: number
   dotsPerEdge?: number
   dotRadius?: number
-  edgeColors?: string[]
+  theme?: string | Theme
   background?: string
   mermaid?: Record<string, unknown>
 }
@@ -21,6 +25,7 @@ export async function exportGif(
   code: string,
   options: GifExportOptions = {}
 ): Promise<Uint8Array> {
+  const resolvedTheme = resolveTheme(options.theme ?? 'dark')
   const {
     width = 800,
     height = 600,
@@ -28,9 +33,8 @@ export async function exportGif(
     totalFrames = 60,
     dotsPerEdge = 3,
     dotRadius = 3,
-    edgeColors = EDGE_COLORS,
-    background = '#fff',
-    mermaid: mermaidOptions = { theme: 'default' }
+    background = resolvedTheme.background,
+    mermaid: mermaidOptions = {}
   } = options
 
   const delay = Math.round(1000 / fps)
@@ -43,7 +47,7 @@ export async function exportGif(
   document.body.appendChild(container)
 
   try {
-    mermaid.initialize({ startOnLoad: false, ...mermaidOptions })
+    mermaid.initialize({ startOnLoad: false, theme: resolvedTheme.mermaidTheme as 'dark' | 'default', ...mermaidOptions })
     const id = `ma-export-${Date.now()}`
     const { svg } = await mermaid.render(id, code)
     container.innerHTML = svg
@@ -66,8 +70,8 @@ export async function exportGif(
     svgEl.setAttribute('height', String(outHeight))
 
     const model = discoverElements(svgEl)
-    styleNodes(model, edgeColors)
-    const geometries = collectEdgeGeometries(model, edgeColors)
+    styleNodes(model, resolvedTheme)
+    const geometries = collectEdgeGeometries(model, resolvedTheme)
 
     const dotGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g')
     dotGroup.setAttribute('id', 'ma-dots')
@@ -75,6 +79,7 @@ export async function exportGif(
 
     const frames: FrameData[] = []
     const spacing = 1 / dotsPerEdge
+    const glowOpacity = resolvedTheme.dotGlowOpacity
 
     for (let f = 0; f < totalFrames; f++) {
       const progress = f / totalFrames
@@ -88,7 +93,7 @@ export async function exportGif(
           const y = pt.y + geo.offsetY
 
           dotsMarkup +=
-            `<circle cx="${x}" cy="${y}" r="${dotRadius * 2.5}" fill="${geo.glowColor}" opacity="0.3"/>` +
+            `<circle cx="${x}" cy="${y}" r="${dotRadius * 2.5}" fill="${geo.glowColor}" opacity="${glowOpacity}"/>` +
             `<circle cx="${x}" cy="${y}" r="${dotRadius}" fill="${geo.color}" opacity="0.95"/>`
         }
       }

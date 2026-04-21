@@ -1,4 +1,5 @@
 import type { GraphElement, GraphModel, MermaidAnimatorOptions } from './types.js'
+import type { Theme } from './themes.js'
 import { topologicalOrder, groupByLevel } from './ordering.js'
 import { collectEdgeGeometries, styleNodes } from './dots.js'
 
@@ -8,7 +9,7 @@ export interface AnimationSequence {
   groups: GraphElement[][]
 }
 
-export function buildSequence(model: GraphModel, options: MermaidAnimatorOptions): AnimationSequence {
+export function buildSequence(model: GraphModel, options: MermaidAnimatorOptions, theme: Theme): AnimationSequence {
   const ordered = topologicalOrder(model.nodes)
   const groups = groupByLevel(ordered)
 
@@ -21,8 +22,8 @@ export function buildSequence(model: GraphModel, options: MermaidAnimatorOptions
     frame = 0
 
     const svgEl = model.svgElement
-    styleNodes(model)
-    const geometries = collectEdgeGeometries(model)
+    styleNodes(model, theme)
+    const geometries = collectEdgeGeometries(model, theme)
 
     if (dotGroup) dotGroup.remove()
     dotGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g')
@@ -32,6 +33,7 @@ export function buildSequence(model: GraphModel, options: MermaidAnimatorOptions
     const dotsPerEdge = 3
     const dotRadius = 3
     const spacing = 1 / dotsPerEdge
+    const glowOpacity = theme.dotGlowOpacity
     const group = dotGroup
 
     return new Promise<void>((resolve) => {
@@ -54,7 +56,7 @@ export function buildSequence(model: GraphModel, options: MermaidAnimatorOptions
             const y = pt.y + geo.offsetY
 
             markup +=
-              `<circle cx="${x}" cy="${y}" r="${dotRadius * 2.5}" fill="${geo.glowColor}" opacity="0.3"/>` +
+              `<circle cx="${x}" cy="${y}" r="${dotRadius * 2.5}" fill="${geo.glowColor}" opacity="${glowOpacity}"/>` +
               `<circle cx="${x}" cy="${y}" r="${dotRadius}" fill="${geo.color}" opacity="0.95"/>`
           }
         }
