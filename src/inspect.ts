@@ -51,8 +51,7 @@ export class InspectHandler {
     }
 
     for (const edge of this.model.edges) {
-      const edgeId = edge.id
-      const isConnected = this.isEdgeConnected(edgeId, connected)
+      const isConnected = this.isEdgeConnected(edge, connected)
       if (isConnected) {
         edge.el.classList.add('ma-highlighted')
         edge.el.classList.remove('ma-dimmed')
@@ -62,10 +61,37 @@ export class InspectHandler {
     this.showPopover(node)
   }
 
-  private isEdgeConnected(edgeId: string, connectedNodes: Set<string>): boolean {
-    const match = edgeId.match(/L-(.+)-(.+)/)
-    if (!match) return false
-    return connectedNodes.has(match[1]) || connectedNodes.has(match[2])
+  private isEdgeConnected(edge: GraphElement, connectedNodes: Set<string>): boolean {
+    const dataFrom = edge.el.getAttribute('data-from')
+    const dataTo = edge.el.getAttribute('data-to')
+    if (dataFrom && dataTo) {
+      for (const nodeId of connectedNodes) {
+        const node = this.model.nodes.find(n => n.id === nodeId)
+        const nodeDataId = node?.el.getAttribute('data-id') ?? ''
+        if (nodeDataId === dataFrom || nodeDataId === dataTo) return true
+      }
+    }
+
+    const dataId = edge.el.getAttribute('data-id') ?? edge.id
+    const underscoreMatch = dataId.match(/^(?:L|id)_(.+?)_(.+?)_\d+$/)
+    if (underscoreMatch) {
+      const [, srcPart, tgtPart] = underscoreMatch
+      for (const nodeId of connectedNodes) {
+        const node = this.model.nodes.find(n => n.id === nodeId)
+        const nodeDataId = node?.el.getAttribute('data-id') ?? ''
+        if (nodeId.includes(srcPart) || nodeId.includes(tgtPart) ||
+            nodeDataId.includes(srcPart) || nodeDataId.includes(tgtPart)) {
+          return true
+        }
+      }
+    }
+
+    const legacyMatch = dataId.match(/L[_-](.+?)[_-](.+)/)
+    if (legacyMatch) {
+      return connectedNodes.has(legacyMatch[1]) || connectedNodes.has(legacyMatch[2])
+    }
+
+    return false
   }
 
   private showPopover(node: GraphElement): void {

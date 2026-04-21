@@ -66,6 +66,23 @@ describe('discoverElements', () => {
     expect(model.edges).toHaveLength(1)
   })
 
+  it('discovers edges by data-edge attribute (Mermaid v11)', () => {
+    const svg = createSvg(`
+      <path class="flowchart-link" data-edge="true" data-id="L_A_B_0" d="M100,50 L200,50"/>
+    `)
+    const model = discoverElements(svg)
+    expect(model.edges).toHaveLength(1)
+    expect(model.edges[0].category).toBe('edge')
+  })
+
+  it('discovers sequence diagram messages by data-et attribute', () => {
+    const svg = createSvg(`
+      <line class="messageLine0" data-et="message" data-id="i0" data-from="Alice" data-to="Bob"/>
+    `)
+    const model = discoverElements(svg)
+    expect(model.edges).toHaveLength(1)
+  })
+
   it('returns empty arrays when SVG has no Mermaid elements', () => {
     const svg = createSvg('<rect width="100" height="100"/>')
     const model = discoverElements(svg)

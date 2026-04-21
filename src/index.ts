@@ -91,19 +91,75 @@ export class MermaidAnimator {
   private buildConnections(): void {
     if (!this.model) return
 
-    for (const edge of this.model.edges) {
-      const match = edge.id.match(/L-(.+?)-(.+)/)
-      if (!match) continue
+    const nodeDataIds = new Map<string, GraphElement>()
+    for (const node of this.model.nodes) {
+      const dataId = node.el.getAttribute('data-id')
+      if (dataId) nodeDataIds.set(dataId, node)
+      nodeDataIds.set(node.id, node)
+    }
 
-      const [, sourceId, targetId] = match
-      const source = this.model.nodes.find(n => n.id.includes(sourceId))
-      const target = this.model.nodes.find(n => n.id.includes(targetId))
+    for (const edge of this.model.edges) {
+      const dataId = edge.el.getAttribute('data-id') ?? ''
+      const dataFrom = edge.el.getAttribute('data-from')
+      const dataTo = edge.el.getAttribute('data-to')
+
+      let source: GraphElement | undefined
+      let target: GraphElement | undefined
+
+      if (dataFrom && dataTo) {
+        source = nodeDataIds.get(dataFrom) ??
+          this.model.nodes.find(n => n.el.getAttribute('data-id') === dataFrom)
+        target = nodeDataIds.get(dataTo) ??
+          this.model.nodes.find(n => n.el.getAttribute('data-id') === dataTo)
+      }
+
+      if (!source || !target) {
+        const underscoreMatch = dataId.match(/^(?:L|id)_(.+?)_(.+?)_\d+$/)
+        if (underscoreMatch) {
+          const [, srcPart, tgtPart] = underscoreMatch
+          source = this.findNodeByPartialId(srcPart)
+          target = this.findNodeByPartialId(tgtPart)
+        }
+      }
+
+      if (!source || !target) {
+        const hyphenMatch = dataId.match(/^id_(entity-.+?)_(entity-.+?)_\d+$/)
+        if (hyphenMatch) {
+          const [, srcPart, tgtPart] = hyphenMatch
+          source = nodeDataIds.get(srcPart) ?? this.findNodeByPartialId(srcPart)
+          target = nodeDataIds.get(tgtPart) ?? this.findNodeByPartialId(tgtPart)
+        }
+      }
+
+      if (!source || !target) {
+        const legacyMatch = edge.id.match(/L[_-](.+?)[_-](.+?)(?:[_-]\d+)?$/)
+        if (legacyMatch) {
+          const [, srcPart, tgtPart] = legacyMatch
+          source = this.findNodeByPartialId(srcPart)
+          target = this.findNodeByPartialId(tgtPart)
+        }
+      }
 
       if (source && target) {
-        source.connections.outgoing.push(target.id)
-        target.connections.incoming.push(source.id)
+        if (!source.connections.outgoing.includes(target.id)) {
+          source.connections.outgoing.push(target.id)
+        }
+        if (!target.connections.incoming.includes(source.id)) {
+          target.connections.incoming.push(source.id)
+        }
       }
     }
+  }
+
+  private findNodeByPartialId(partial: string): GraphElement | undefined {
+    if (!this.model) return undefined
+    return this.model.nodes.find(n => {
+      const nodeDataId = n.el.getAttribute('data-id') ?? ''
+      return n.id === partial ||
+        nodeDataId === partial ||
+        n.id.includes(partial) ||
+        nodeDataId.includes(partial)
+    })
   }
 
   private hideAll(): void {

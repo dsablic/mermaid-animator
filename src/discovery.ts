@@ -2,8 +2,8 @@ import type { GraphElement, GraphModel, ElementCategory } from './types.js'
 
 const CATEGORY_SELECTORS: [ElementCategory, string[]][] = [
   ['cluster', ['.cluster', '.section']],
-  ['node', ['.node', '.state', '.entity', '.task', '.actor']],
-  ['edge', ['.edgePath', '.messageLine', '.relation']],
+  ['node', ['.node', '.state', '.entity', '.task', '.actor', '[data-et="participant"]']],
+  ['edge', ['.edgePath', '[data-edge="true"]', '[data-et="edge"]', '[data-et="message"]', '.messageLine0', '.messageLine1', '.flowchart-link', '.relation', '.transition', '.relationshipLine']],
   ['label', ['.edgeLabel', '.noteText']]
 ]
 
@@ -37,6 +37,10 @@ function extractPosition(el: SVGElement): { x: number; y: number; width: number;
   return { x, y, width, height }
 }
 
+function extractDataId(el: SVGElement): string {
+  return el.getAttribute('data-id') ?? ''
+}
+
 export function discoverElements(svg: SVGSVGElement): GraphModel {
   const nodes: GraphElement[] = []
   const edges: GraphElement[] = []
@@ -54,10 +58,11 @@ export function discoverElements(svg: SVGSVGElement): GraphModel {
       seen.add(el)
 
       const pos = extractPosition(el)
+      const dataId = extractDataId(el)
       const graphEl: GraphElement = {
         el,
         category,
-        id: el.id || `${category}-${elements.length}`,
+        id: el.id || dataId || `${category}-${elements.length}`,
         label: extractLabel(el),
         ...pos,
         connections: { incoming: [], outgoing: [] }
