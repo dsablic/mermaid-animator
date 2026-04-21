@@ -21,7 +21,14 @@
   ],
   "main": "dist/mermaid-animator.js",
   "exports": {
-    ".": "./dist/mermaid-animator.js"
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/mermaid-animator.js"
+    },
+    "./export": {
+      "types": "./dist/export.d.ts",
+      "default": "./dist/mermaid-animator-export.js"
+    }
   },
   "types": "dist/index.d.ts",
   "files": [
@@ -30,20 +37,25 @@
   "scripts": {
     "build": "esbuild src/index.ts --bundle --format=esm --outfile=dist/mermaid-animator.js --external:mermaid",
     "build:umd": "esbuild src/index.ts --bundle --format=iife --global-name=MermaidAnimator --outfile=dist/mermaid-animator.umd.js --external:mermaid",
-    "build:all": "npm run build && npm run build:umd && tsc --emitDeclarationOnly",
-    "test": "vitest run",
-    "test:watch": "vitest",
-    "dev": "npx serve ."
+    "build:export": "esbuild src/export.ts --bundle --format=esm --outfile=dist/mermaid-animator-export.js --external:mermaid",
+    "build:all": "npm run build && npm run build:umd && npm run build:export && tsc --emitDeclarationOnly",
+    "test": "node --import tsx --test test/**/*.test.ts",
+    "test:watch": "node --import tsx --test --watch test/**/*.test.ts",
+    "dev": "npx serve .",
+    "generate-examples": "node --import tsx scripts/generate-examples.ts"
   },
   "peerDependencies": {
     "mermaid": ">=10.0.0"
   },
   "devDependencies": {
-    "@types/jsdom": "28.0.1",
     "esbuild": "0.28.0",
     "jsdom": "29.0.2",
     "mermaid": "11.14.0",
-    "typescript": "6.0.3",
-    "vitest": "4.1.4"
+    "puppeteer": "24.42.0",
+    "tsx": "4.19.4",
+    "typescript": "6.0.3"
+  },
+  "dependencies": {
+    "gifenc": "1.0.3"
   }
 }

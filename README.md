@@ -4,6 +4,11 @@ Animated, interactive Mermaid.js diagram viewer. Takes Mermaid code in, produces
 
 Supports all Mermaid diagram types: flowcharts, sequence diagrams, class diagrams, state diagrams, ER diagrams, and more.
 
+<p align="center">
+  <img src="examples/flowchart.gif" alt="Flowchart animation" width="400"/>
+  <img src="examples/sequence.gif" alt="Sequence diagram animation" width="400"/>
+</p>
+
 ## Features
 
 - Animated rendering -- nodes fade/scale in, edges draw progressively, staggered by graph order
@@ -76,6 +81,44 @@ animator.on('animationEnd', () => {})
 animator.on('nodeClick', (node) => {})
 animator.on('step', (index, total) => {})
 ```
+
+### GIF Export
+
+Export animated diagrams as GIF files. Available as a separate import to keep the main bundle small.
+
+```js
+import { exportGif } from 'mermaid-animator/export'
+
+const gifBytes = await exportGif(`graph TD
+  A[Start] --> B{Decision}
+  B -->|Yes| C[Process]
+  B -->|No| D[End]
+  C --> D`, {
+  width: 800,
+  height: 600,
+  fps: 10
+})
+
+// Download
+const blob = new Blob([gifBytes], { type: 'image/gif' })
+const url = URL.createObjectURL(blob)
+const a = document.createElement('a')
+a.href = url
+a.download = 'diagram.gif'
+a.click()
+```
+
+#### Export Options
+
+| Option | Default | Description |
+|--------|---------|-------------|
+| `width` | 800 | GIF width in pixels |
+| `height` | 600 | GIF height in pixels |
+| `fps` | 10 | Frames per second |
+| `stagger` | 80 | ms between groups appearing |
+| `holdFirstFrame` | 500 | ms to hold the initial frame |
+| `holdLastFrame` | 1500 | ms to hold the final complete frame |
+| `mermaid` | `{ theme: 'default' }` | Mermaid configuration |
 
 ### Keyboard Shortcuts
 

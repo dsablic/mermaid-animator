@@ -1,5 +1,6 @@
 import type { GraphElement, GraphModel, MermaidAnimatorOptions } from './types.js'
 import { topologicalOrder, groupByLevel } from './ordering.js'
+import { collectEdgeGeometries } from './dots.js'
 
 export interface AnimationSequence {
   play(): Promise<void>
@@ -7,109 +8,66 @@ export interface AnimationSequence {
   groups: GraphElement[][]
 }
 
-function hideAll(model: GraphModel): void {
-  for (const el of model.elements) {
-    el.el.classList.add('ma-hidden')
-  }
-}
-
-function animateNode(el: GraphElement, options: MermaidAnimatorOptions): Animation {
-  el.el.classList.remove('ma-hidden')
-  return el.el.animate(
-    [
-      { opacity: 0, transform: 'scale(0.8)' },
-      { opacity: 1, transform: 'scale(1)' }
-    ],
-    { duration: options.duration, easing: options.easing, fill: 'forwards' }
-  )
-}
-
-function animateCluster(el: GraphElement, options: MermaidAnimatorOptions): Animation {
-  el.el.classList.remove('ma-hidden')
-  return el.el.animate(
-    [
-      { opacity: 0, transform: 'scale(0.95)' },
-      { opacity: 1, transform: 'scale(1)' }
-    ],
-    { duration: options.duration, easing: options.easing, fill: 'forwards' }
-  )
-}
-
-function animateEdge(el: GraphElement, options: MermaidAnimatorOptions): Animation {
-  el.el.classList.remove('ma-hidden')
-  const path = el.el.querySelector('path')
-  if (path) {
-    const length = path.getTotalLength?.() ?? 300
-    path.style.strokeDasharray = `${length}`
-    path.style.strokeDashoffset = `${length}`
-    return path.animate(
-      [
-        { strokeDashoffset: length },
-        { strokeDashoffset: 0 }
-      ],
-      { duration: options.duration * 1.5, easing: options.easing, fill: 'forwards' }
-    )
-  }
-  el.el.classList.remove('ma-hidden')
-  return el.el.animate(
-    [{ opacity: 0 }, { opacity: 1 }],
-    { duration: options.duration, easing: options.easing, fill: 'forwards' }
-  )
-}
-
-function animateLabel(el: GraphElement, options: MermaidAnimatorOptions): Animation {
-  el.el.classList.remove('ma-hidden')
-  return el.el.animate(
-    [{ opacity: 0 }, { opacity: 1 }],
-    { duration: options.duration * 0.8, easing: options.easing, fill: 'forwards' }
-  )
-}
-
-function animateElement(el: GraphElement, options: MermaidAnimatorOptions): Animation {
-  switch (el.category) {
-    case 'cluster': return animateCluster(el, options)
-    case 'node': return animateNode(el, options)
-    case 'edge': return animateEdge(el, options)
-    case 'label': return animateLabel(el, options)
-  }
-}
-
 export function buildSequence(model: GraphModel, options: MermaidAnimatorOptions): AnimationSequence {
   const ordered = topologicalOrder(model.nodes)
   const groups = groupByLevel(ordered)
 
-  const allOrdered: GraphElement[] = [
-    ...model.clusters,
-    ...groups.flat(),
-    ...model.edges,
-    ...model.labels
-  ]
-
   let cancelled = false
-  const activeAnimations: Animation[] = []
+  let frame = 0
+  let dotGroup: SVGGElement | null = null
 
   async function play(): Promise<void> {
     cancelled = false
-    hideAll(model)
+    frame = 0
 
-    for (let i = 0; i < allOrdered.length; i++) {
-      if (cancelled) return
-      const anim = animateElement(allOrdered[i], options)
-      activeAnimations.push(anim)
-      await new Promise<void>(resolve => {
-        setTimeout(resolve, options.stagger)
-      })
-    }
+    const svgEl = model.svgElement
+    const geometries = collectEdgeGeometries(model)
 
-    await Promise.all(activeAnimations.map(a => a.finished.catch(() => {})))
+    if (dotGroup) dotGroup.remove()
+    dotGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g')
+    dotGroup.setAttribute('id', 'ma-dots')
+    svgEl.appendChild(dotGroup)
+
+    const dotsPerEdge = 3
+    const dotRadius = 3
+    const spacing = 1 / dotsPerEdge
+    const group = dotGroup
+
+    return new Promise<void>((resolve) => {
+      function tick() {
+        if (cancelled) {
+          group.remove()
+          resolve()
+          return
+        }
+
+        frame++
+        const progress = (frame * 0.008) % 1
+        let markup = ''
+
+        for (const geo of geometries) {
+          for (let d = 0; d < dotsPerEdge; d++) {
+            const t = (progress + geo.phase + d * spacing) % 1
+            const pt = geo.getPoint(t)
+            const x = pt.x + geo.offsetX
+            const y = pt.y + geo.offsetY
+
+            markup +=
+              `<circle cx="${x}" cy="${y}" r="${dotRadius * 2.5}" fill="${geo.glowColor}" opacity="0.3"/>` +
+              `<circle cx="${x}" cy="${y}" r="${dotRadius}" fill="${geo.color}" opacity="0.95"/>`
+          }
+        }
+
+        group.innerHTML = markup
+        requestAnimationFrame(tick)
+      }
+
+      requestAnimationFrame(tick)
+    })
   }
 
   function cancel(): void {
     cancelled = true
-    for (const anim of activeAnimations) {
-      anim.cancel()
-    }
-    activeAnimations.length = 0
   }
 
   return { play, cancel, groups }

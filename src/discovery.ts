@@ -3,8 +3,8 @@ import type { GraphElement, GraphModel, ElementCategory } from './types.js'
 const CATEGORY_SELECTORS: [ElementCategory, string[]][] = [
   ['cluster', ['.cluster', '.section']],
   ['node', ['.node', '.state', '.entity', '.task', '.actor', '[data-et="participant"]']],
-  ['edge', ['.edgePath', '[data-edge="true"]', '[data-et="edge"]', '[data-et="message"]', '.messageLine0', '.messageLine1', '.flowchart-link', '.relation', '.transition', '.relationshipLine']],
-  ['label', ['.edgeLabel', '.noteText']]
+  ['edge', ['.edgePath', '[data-edge="true"]', '[data-et="edge"]', '[data-et="message"]', '.messageLine0', '.messageLine1', '.flowchart-link', '.relation', '.transition', '.relationshipLine', '.actor-line']],
+  ['label', ['.edgeLabel', '.noteText', '.messageText']]
 ]
 
 function extractLabel(el: SVGElement): string {

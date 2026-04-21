@@ -304,6 +304,8 @@
       <button id="next-btn" class="btn" disabled>Next</button>
       <div class="separator"></div>
       <button id="fit-btn" class="btn">Fit</button>
+      <div class="separator"></div>
+      <button id="export-gif-btn" class="btn">Export GIF</button>
       <span class="mode-label">Mode:</span>
       <button id="mode-btn" class="btn">Auto</button>
     </div>
@@ -435,6 +437,7 @@
   const nextBtn = document.getElementById('next-btn');
   const stepCounter = document.getElementById('step-counter');
   const fitBtn = document.getElementById('fit-btn');
+  const exportGifBtn = document.getElementById('export-gif-btn');
   const modeBtn = document.getElementById('mode-btn');
 
   // ---- State ----
@@ -583,6 +586,64 @@
   fitBtn.addEventListener('click', () => {
     if (animator) {
       animator.fitToView();
+    }
+  });
+
+  // ---- Toolbar: Export GIF ----
+
+  exportGifBtn.addEventListener('click', async () => {
+    const code = editor.value.trim();
+    if (!code) return;
+
+    exportGifBtn.disabled = true;
+    exportGifBtn.textContent = 'Exporting...';
+    clearError();
+
+    try {
+      const { exportGif } = await import('../dist/mermaid-animator-export.js');
+      const gifBytes = await exportGif(code, {
+        width: diagramEl.clientWidth || 800,
+        height: diagramEl.clientHeight || 600,
+        background: '#0e0e22',
+        mermaid: { theme: 'dark' }
+      });
+
+      const blob = new Blob([gifBytes], { type: 'image/gif' });
+      const url = URL.createObjectURL(blob);
+
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'diagram.gif';
+      link.click();
+
+      const existing = document.getElementById('gif-preview');
+      if (existing) existing.remove();
+
+      const preview = document.createElement('img');
+      preview.id = 'gif-preview';
+      preview.src = url;
+      preview.style.cssText =
+        'position:fixed;bottom:16px;right:16px;max-width:200px;max-height:150px;' +
+        'border:1px solid #2a2a4a;border-radius:6px;z-index:999;background:#0e0e22;' +
+        'box-shadow:0 4px 12px rgba(0,0,0,0.5);cursor:pointer;';
+      preview.title = 'Click to dismiss';
+      preview.addEventListener('click', () => {
+        preview.remove();
+        URL.revokeObjectURL(url);
+      });
+      document.body.appendChild(preview);
+
+      setTimeout(() => {
+        if (preview.parentNode) {
+          preview.remove();
+          URL.revokeObjectURL(url);
+        }
+      }, 10000);
+    } catch (err) {
+      showError(String(err.message || err));
+    } finally {
+      exportGifBtn.disabled = false;
+      exportGifBtn.textContent = 'Export GIF';
     }
   });
 

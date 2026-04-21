@@ -56,6 +56,11 @@ export class MermaidAnimator {
     const svgEl = this.container.querySelector('svg')
     if (!svgEl) throw new Error('Mermaid did not produce an SVG element')
 
+    svgEl.removeAttribute('width')
+    svgEl.removeAttribute('height')
+    svgEl.style.maxWidth = 'none'
+    svgEl.setAttribute('overflow', 'visible')
+
     this.model = discoverElements(svgEl)
     this.buildConnections()
 
