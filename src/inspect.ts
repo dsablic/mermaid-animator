@@ -8,6 +8,7 @@ export class InspectHandler {
   private emitter: EventEmitter<AnimatorEvents>
   private popover: HTMLElement | null = null
   private activeNode: GraphElement | null = null
+  private hoverNode: GraphElement | null = null
 
   constructor(
     container: HTMLElement,
@@ -27,15 +28,21 @@ export class InspectHandler {
         e.stopPropagation()
         this.inspectNode(node)
       })
+      node.el.addEventListener('mouseenter', () => {
+        if (this.activeNode) return
+        this.hoverNode = node
+        this.highlightConnected(node)
+      })
+      node.el.addEventListener('mouseleave', () => {
+        if (this.activeNode || this.hoverNode !== node) return
+        this.hoverNode = null
+        this.clearHighlight()
+      })
     }
     this.container.addEventListener('click', this.dismiss)
   }
 
-  inspectNode(node: GraphElement): void {
-    this.dismiss()
-    this.activeNode = node
-    this.emitter.emit('nodeClick', node)
-
+  private highlightConnected(node: GraphElement): void {
     const connected = new Set<string>([node.id])
     for (const id of node.connections.outgoing) connected.add(id)
     for (const id of node.connections.incoming) connected.add(id)
@@ -51,13 +58,25 @@ export class InspectHandler {
     }
 
     for (const edge of this.model.edges) {
-      const isConnected = this.isEdgeConnected(edge, connected)
-      if (isConnected) {
+      if (this.isEdgeConnected(edge, connected)) {
         edge.el.classList.add('ma-highlighted')
         edge.el.classList.remove('ma-dimmed')
       }
     }
+  }
 
+  private clearHighlight(): void {
+    for (const el of this.model.elements) {
+      el.el.classList.remove('ma-highlighted', 'ma-dimmed')
+    }
+  }
+
+  inspectNode(node: GraphElement): void {
+    this.dismiss()
+    this.activeNode = node
+    this.hoverNode = null
+    this.emitter.emit('nodeClick', node)
+    this.highlightConnected(node)
     this.showPopover(node)
   }
 
@@ -133,10 +152,9 @@ export class InspectHandler {
 
   dismiss = (): void => {
     this.activeNode = null
+    this.hoverNode = null
     this.removePopover()
-    for (const el of this.model.elements) {
-      el.el.classList.remove('ma-highlighted', 'ma-dimmed')
-    }
+    this.clearHighlight()
   }
 
   destroy(): void {
