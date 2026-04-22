@@ -120,6 +120,37 @@ animator.on('nodeClick', (node) => {})
 animator.on('step', (index, total) => {})
 ```
 
+### CLI
+
+Generate animated GIFs from the command line:
+
+```bash
+# From a file
+mermaid-animator diagram.mmd -o output.gif
+
+# With options
+mermaid-animator diagram.mmd -o output.gif --theme light -W 1024 -H 768
+
+# From stdin
+cat diagram.mmd | mermaid-animator -o output.gif
+
+# To stdout (pipe to another tool)
+mermaid-animator diagram.mmd > output.gif
+```
+
+#### CLI Options
+
+| Option | Default | Description |
+|--------|---------|-------------|
+| `-o, --output <file>` | stdout | Output GIF path |
+| `-t, --theme <name>` | `dark` | `'dark'` or `'light'` |
+| `-W, --width <px>` | 800 | Max width (aspect ratio preserved) |
+| `-H, --height <px>` | 600 | Max height (aspect ratio preserved) |
+| `--fps <n>` | 12 | Frames per second |
+| `--frames <n>` | 60 | Total animation frames |
+
+Requires `puppeteer` to be installed (`npm install puppeteer`).
+
 ### GIF Export
 
 Export animated diagrams as GIF files with traveling dots. Available as a separate import to keep the main bundle small.

@@ -7,10 +7,12 @@ TypeScript library that renders Mermaid.js diagrams as animated, interactive SVG
 - `src/` - Library source (TypeScript, zero framework dependencies beyond Mermaid)
 - `src/dots.ts` - Shared edge colorization and dot geometry (used by both live animation and GIF export)
 - `src/export.ts` - GIF export entry point (separate bundle: `mermaid-animator/export`)
+- `src/cli.ts` - CLI entry point (`mermaid-animator` command)
 - `test/` - Unit tests (node:test + jsdom)
 - `demo/` - Single-page demo app (no build step)
 - `dist/` - Built output (ESM + UMD + export + .d.ts)
-- `scripts/` - Puppeteer-based example GIF generation
+- `scripts/` - Example generation shell script and diagram source files
+- `scripts/diagrams/` - Mermaid source files for example GIFs
 - `examples/` - Generated animated GIF examples
 
 ## Commands
@@ -19,6 +21,7 @@ TypeScript library that renders Mermaid.js diagrams as animated, interactive SVG
 - `npm run build` - Build ESM bundle
 - `npm run build:umd` - Build UMD bundle
 - `npm run build:export` - Build export/GIF bundle
+- `npm run build:cli` - Build CLI
 - `npm run build:all` - Build ESM + UMD + export + type declarations
 - `npm run dev` - Serve project for demo testing
 - `npm run generate-examples` - Regenerate example GIFs in `examples/` (requires build first, uses Puppeteer)

@@ -1,0 +1,15 @@
+graph TD
+    Start([Start]) --> Validate[Validate Input]
+    Validate --> Decision{Valid?}
+    Decision -->|Yes| Process[Process Data]
+    Decision -->|No| Error[Show Error]
+    Error --> Validate
+    Process --> Store[(Store Results)]
+
+    subgraph Pipeline
+      Process
+      Store
+    end
+
+    Store --> Notify[Send Notification]
+    Notify --> End([End])

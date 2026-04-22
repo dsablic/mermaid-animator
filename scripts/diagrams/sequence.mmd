@@ -1,0 +1,18 @@
+sequenceDiagram
+    participant Client
+    participant Server
+    participant Database
+
+    Client->>Server: POST /api/login
+    Server->>Database: Query user record
+    Database-->>Server: User data
+    Server->>Server: Validate credentials
+    alt Valid credentials
+        Server-->>Client: 200 OK + token
+        Client->>Server: GET /api/profile
+        Server->>Database: Fetch profile
+        Database-->>Server: Profile data
+        Server-->>Client: 200 OK + profile
+    else Invalid credentials
+        Server-->>Client: 401 Unauthorized
+    end
