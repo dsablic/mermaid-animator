@@ -22,7 +22,6 @@ export class MermaidAnimator {
   private panZoom: PanZoomHandler | null = null
   private inspectHandler: InspectHandler | null = null
   private keyboard: KeyboardHandler | null = null
-  private currentStep = 0
 
   private constructor(container: HTMLElement, options: MermaidAnimatorOptions) {
     this.container = container
@@ -79,22 +78,15 @@ export class MermaidAnimator {
     }
 
     this.keyboard = new KeyboardHandler({
-      onNext: () => this.next(),
-      onPrev: () => this.prev(),
       onReplay: () => this.replay(),
       onFitToView: () => this.fitToView(),
       onDismiss: () => this.inspectHandler?.dismiss(),
       panZoom: this.panZoom
     })
 
-    if (this.options.mode === 'auto') {
-      this.emitter.emit('animationStart')
-      await this.sequence.play()
-      this.emitter.emit('animationEnd')
-    } else {
-      this.hideAll()
-      this.currentStep = 0
-    }
+    this.emitter.emit('animationStart')
+    await this.sequence.play()
+    this.emitter.emit('animationEnd')
   }
 
   private buildConnections(): void {
@@ -171,54 +163,12 @@ export class MermaidAnimator {
     })
   }
 
-  private hideAll(): void {
-    if (!this.model) return
-    for (const el of this.model.elements) {
-      el.el.classList.add('ma-hidden')
-    }
-  }
-
   async replay(): Promise<void> {
     if (!this.sequence || !this.model) return
     this.sequence.cancel()
-    this.currentStep = 0
     this.emitter.emit('animationStart')
     await this.sequence.play()
     this.emitter.emit('animationEnd')
-  }
-
-  next(): void {
-    if (!this.sequence || this.options.mode !== 'stepped') return
-    const groups = this.sequence.groups
-    if (this.currentStep >= groups.length) return
-
-    const group = groups[this.currentStep]
-    for (const el of group) {
-      el.el.classList.remove('ma-hidden')
-      el.el.animate(
-        [
-          { opacity: 0, transform: 'scale(0.8)' },
-          { opacity: 1, transform: 'scale(1)' }
-        ],
-        { duration: this.options.duration, easing: this.options.easing, fill: 'forwards' }
-      )
-    }
-
-    this.currentStep++
-    this.emitter.emit('step', this.currentStep, groups.length)
-  }
-
-  prev(): void {
-    if (!this.sequence || this.options.mode !== 'stepped') return
-    if (this.currentStep <= 0) return
-
-    this.currentStep--
-    const group = this.sequence.groups[this.currentStep]
-    for (const el of group) {
-      el.el.classList.add('ma-hidden')
-    }
-
-    this.emitter.emit('step', this.currentStep, this.sequence.groups.length)
   }
 
   fitToView(): void {

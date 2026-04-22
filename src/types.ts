@@ -1,12 +1,6 @@
-export type AnimationMode = 'auto' | 'stepped'
-
 import type { Theme } from './themes.js'
 
 export interface MermaidAnimatorOptions {
-  mode: AnimationMode
-  stagger: number
-  duration: number
-  easing: string
   pan: boolean
   zoom: boolean
   inspect: boolean
@@ -22,10 +16,6 @@ export interface MermaidAnimatorOptions {
 export type PartialOptions = Partial<MermaidAnimatorOptions>
 
 export const DEFAULT_OPTIONS: MermaidAnimatorOptions = {
-  mode: 'auto',
-  stagger: 80,
-  duration: 300,
-  easing: 'ease-out',
   pan: true,
   zoom: true,
   inspect: true,
@@ -65,5 +55,4 @@ export interface AnimatorEvents {
   animationStart: []
   animationEnd: []
   nodeClick: [node: GraphElement]
-  step: [index: number, total: number]
 }

@@ -1,8 +1,6 @@
 import type { PanZoomHandler } from './pan-zoom.js'
 
 export interface KeyboardCallbacks {
-  onNext: () => void
-  onPrev: () => void
   onReplay: () => void
   onFitToView: () => void
   onDismiss: () => void
@@ -19,16 +17,6 @@ export class KeyboardHandler {
 
   private onKeyDown = (e: KeyboardEvent): void => {
     switch (e.key) {
-      case 'ArrowRight':
-      case ' ':
-      case 'Enter':
-        e.preventDefault()
-        this.callbacks.onNext()
-        break
-      case 'ArrowLeft':
-        e.preventDefault()
-        this.callbacks.onPrev()
-        break
       case '+':
       case '=':
         e.preventDefault()

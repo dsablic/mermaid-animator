@@ -1,18 +1,13 @@
-import type { GraphElement, GraphModel, MermaidAnimatorOptions } from './types.js'
+import type { GraphModel, MermaidAnimatorOptions } from './types.js'
 import type { Theme } from './themes.js'
-import { topologicalOrder, groupByLevel } from './ordering.js'
 import { collectEdgeGeometries, styleNodes } from './dots.js'
 
 export interface AnimationSequence {
   play(): Promise<void>
   cancel(): void
-  groups: GraphElement[][]
 }
 
 export function buildSequence(model: GraphModel, options: MermaidAnimatorOptions, theme: Theme): AnimationSequence {
-  const ordered = topologicalOrder(model.nodes)
-  const groups = groupByLevel(ordered)
-
   let cancelled = false
   let frame = 0
   let dotGroup: SVGGElement | null = null
@@ -72,5 +67,5 @@ export function buildSequence(model: GraphModel, options: MermaidAnimatorOptions
     cancelled = true
   }
 
-  return { play, cancel, groups }
+  return { play, cancel }
 }

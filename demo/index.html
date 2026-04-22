@@ -330,28 +330,10 @@
     .theme-dark .toolbar .separator { background: #2a2a4a; }
     .theme-light .toolbar .separator { background: #d0d0d8; }
 
-    .step-counter {
-      font-size: 13px;
-      min-width: 56px;
-      text-align: center;
-      font-variant-numeric: tabular-nums;
-    }
-
-    .theme-dark .step-counter { color: #888; }
-    .theme-light .step-counter { color: #999; }
-
     .toolbar .btn {
       padding: 5px 12px;
       font-size: 12px;
     }
-
-    .mode-label {
-      font-size: 12px;
-      margin-left: auto;
-    }
-
-    .theme-dark .mode-label { color: #666; }
-    .theme-light .mode-label { color: #999; }
 
     .settings-row {
       display: none;
@@ -468,20 +450,12 @@
     <div id="error" class="error-message" style="display: none;"></div>
 
     <div class="toolbar">
-      <button id="play-btn" class="btn">Play / Replay</button>
-      <div class="separator"></div>
-      <button id="prev-btn" class="btn" disabled>Prev</button>
-      <span id="step-counter" class="step-counter">-- / --</span>
-      <button id="next-btn" class="btn" disabled>Next</button>
-      <div class="separator"></div>
       <button id="fit-btn" class="btn">Fit</button>
       <div class="separator"></div>
       <button id="export-gif-btn" class="btn">Export GIF</button>
       <button id="share-btn" class="btn">Share</button>
       <div class="separator"></div>
       <button id="settings-btn" class="btn">Settings</button>
-      <span class="mode-label">Mode:</span>
-      <button id="mode-btn" class="btn">Auto</button>
     </div>
 
     <div id="settings-row" class="settings-row">
@@ -624,14 +598,9 @@
   const autorunCheckbox = document.getElementById('autorun');
   const diagramEl = document.getElementById('diagram');
   const errorEl = document.getElementById('error');
-  const playBtn = document.getElementById('play-btn');
-  const prevBtn = document.getElementById('prev-btn');
-  const nextBtn = document.getElementById('next-btn');
-  const stepCounter = document.getElementById('step-counter');
   const fitBtn = document.getElementById('fit-btn');
   const exportGifBtn = document.getElementById('export-gif-btn');
   const shareBtn = document.getElementById('share-btn');
-  const modeBtn = document.getElementById('mode-btn');
   const themeToggle = document.getElementById('theme-toggle');
   const settingsBtn = document.getElementById('settings-btn');
   const settingsRow = document.getElementById('settings-row');
@@ -644,10 +613,8 @@
   const toastEl = document.getElementById('toast');
 
   let animator = null;
-  let currentMode = 'auto';
   let currentTheme = 'dark';
   let debounceTimer = null;
-  let totalSteps = 0;
 
   function setTheme(theme) {
     currentTheme = theme;
@@ -708,19 +675,12 @@
     errorEl.textContent = '';
   }
 
-  function updateStepCounter(current, total) {
-    totalSteps = total;
-    stepCounter.textContent = `${current} / ${total}`;
-  }
-
-  function resetStepCounter() {
-    totalSteps = 0;
-    stepCounter.textContent = '-- / --';
-  }
-
-  function updateSteppedControls(enabled) {
-    prevBtn.disabled = !enabled;
-    nextBtn.disabled = !enabled;
+  function getDotOptions() {
+    return {
+      dotSpeed: parseInt(speedSlider.value) * 0.001,
+      dotsPerEdge: parseInt(densitySlider.value),
+      dotRadius: parseInt(sizeSlider.value)
+    };
   }
 
   async function runDiagram(code) {
@@ -737,23 +697,9 @@
       }
 
       animator = await MermaidAnimator.create(diagramEl, code.trim(), {
-        mode: currentMode,
         theme: currentTheme,
         ...getDotOptions()
       });
-
-      animator.on('step', (index, total) => {
-        updateStepCounter(index, total);
-      });
-
-      updateSteppedControls(currentMode === 'stepped');
-
-      if (currentMode === 'stepped') {
-        animator.next();
-        animator.prev();
-      } else {
-        resetStepCounter();
-      }
 
       updateHash(code);
     } catch (err) {
@@ -787,26 +733,6 @@
     }, 500);
   });
 
-  playBtn.addEventListener('click', async () => {
-    if (!animator) {
-      await runDiagram(editor.value);
-      return;
-    }
-    if (currentMode === 'stepped') {
-      await runDiagram(editor.value);
-    } else {
-      await animator.replay();
-    }
-  });
-
-  prevBtn.addEventListener('click', () => {
-    if (animator && currentMode === 'stepped') animator.prev();
-  });
-
-  nextBtn.addEventListener('click', () => {
-    if (animator && currentMode === 'stepped') animator.next();
-  });
-
   fitBtn.addEventListener('click', () => {
     if (animator) animator.fitToView();
   });
@@ -824,8 +750,6 @@
       const cdnExport = 'https://cdn.jsdelivr.net/npm/mermaid-animator/dist/mermaid-animator-export.js';
       const { exportGif } = await import(localExport).catch(() => import(cdnExport));
       const gifBytes = await exportGif(code, {
-        width: diagramEl.clientWidth || 800,
-        height: diagramEl.clientHeight || 600,
         theme: currentTheme
       });
 
@@ -879,37 +803,10 @@
     });
   });
 
-  modeBtn.addEventListener('click', async () => {
-    if (currentMode === 'auto') {
-      currentMode = 'stepped';
-      modeBtn.textContent = 'Stepped';
-      modeBtn.classList.add('btn-active');
-      updateSteppedControls(true);
-    } else {
-      currentMode = 'auto';
-      modeBtn.textContent = 'Auto';
-      modeBtn.classList.remove('btn-active');
-      updateSteppedControls(false);
-      resetStepCounter();
-    }
-
-    if (editor.value.trim()) {
-      await runDiagram(editor.value);
-    }
-  });
-
   settingsBtn.addEventListener('click', () => {
     settingsRow.classList.toggle('visible');
     settingsBtn.classList.toggle('btn-active');
   });
-
-  function getDotOptions() {
-    return {
-      dotSpeed: parseInt(speedSlider.value) * 0.001,
-      dotsPerEdge: parseInt(densitySlider.value),
-      dotRadius: parseInt(sizeSlider.value)
-    };
-  }
 
   function onSettingChange() {
     speedValue.textContent = speedSlider.value;

@@ -53,16 +53,12 @@ npm install mermaid-animator mermaid
 ```js
 const animator = await MermaidAnimator.create(container, code, {
   theme: 'dark',       // 'dark', 'light', or a custom Theme object
-  mode: 'auto',        // 'auto' or 'stepped'
   dotSpeed: 0.008,     // dot travel speed (higher = faster)
   dotsPerEdge: 3,      // number of dots per edge
   dotRadius: 3,        // dot size in SVG units
-  stagger: 80,         // ms between element animations (stepped mode)
-  duration: 300,       // ms per animation (stepped mode)
-  easing: 'ease-out',  // CSS easing (stepped mode)
   pan: true,           // enable pan
   zoom: true,          // enable zoom
-  inspect: true,       // enable click-to-inspect
+  inspect: true,       // enable click-to-inspect/hover-to-highlight
   minZoom: 0.1,
   maxZoom: 5,
   mermaid: {}          // extra options passed to mermaid.initialize()
@@ -107,9 +103,7 @@ import type { Theme } from 'mermaid-animator'
 ### Methods
 
 ```js
-animator.replay()           // restart animation
-animator.next()             // next step (stepped mode)
-animator.prev()             // previous step (stepped mode)
+animator.replay()           // restart dot animation
 animator.fitToView()        // reset zoom/pan
 animator.update(newCode)    // re-render with new Mermaid code
 animator.inspect('nodeId')  // programmatically inspect a node
@@ -122,7 +116,6 @@ animator.destroy()          // cleanup
 animator.on('animationStart', () => {})
 animator.on('animationEnd', () => {})
 animator.on('nodeClick', (node) => {})
-animator.on('step', (index, total) => {})
 ```
 
 ### CLI
@@ -198,8 +191,6 @@ a.click()
 
 | Key | Action |
 |-----|--------|
-| Right / Space / Enter | Next step |
-| Left | Previous step |
 | + / - | Zoom in / out |
 | 0 | Fit to view |
 | R | Replay |
