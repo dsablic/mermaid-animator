@@ -516,7 +516,9 @@
 </script>
 
 <script type="module">
-  import { MermaidAnimator } from '../dist/mermaid-animator.js';
+  const LOCAL = '../dist/mermaid-animator.js';
+  const CDN = 'https://cdn.jsdelivr.net/npm/mermaid-animator/dist/mermaid-animator.js';
+  const { MermaidAnimator } = await import(LOCAL).catch(() => import(CDN));
 
   const EXAMPLES = {
     flowchart: `graph TD
@@ -818,7 +820,9 @@
     clearError();
 
     try {
-      const { exportGif } = await import('../dist/mermaid-animator-export.js');
+      const localExport = '../dist/mermaid-animator-export.js';
+      const cdnExport = 'https://cdn.jsdelivr.net/npm/mermaid-animator/dist/mermaid-animator-export.js';
+      const { exportGif } = await import(localExport).catch(() => import(cdnExport));
       const gifBytes = await exportGif(code, {
         width: diagramEl.clientWidth || 800,
         height: diagramEl.clientHeight || 600,
