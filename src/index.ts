@@ -59,6 +59,13 @@ export class MermaidAnimator {
     const svgEl = this.container.querySelector('svg')
     if (!svgEl) throw new Error('Mermaid did not produce an SVG element')
 
+    const vb = svgEl.viewBox.baseVal
+    if (!vb.width || !vb.height) {
+      const w = svgEl.getAttribute('width') ?? svgEl.getBoundingClientRect().width
+      const h = svgEl.getAttribute('height') ?? svgEl.getBoundingClientRect().height
+      svgEl.setAttribute('viewBox', `0 0 ${w} ${h}`)
+    }
+
     svgEl.removeAttribute('width')
     svgEl.removeAttribute('height')
     svgEl.style.maxWidth = 'none'
