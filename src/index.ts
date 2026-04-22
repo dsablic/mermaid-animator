@@ -76,9 +76,7 @@ export class MermaidAnimator {
 
     this.sequence = buildSequence(this.model, this.options, theme)
 
-    if (this.options.pan || this.options.zoom) {
-      this.panZoom = new PanZoomHandler(this.container, svgEl, this.options)
-    }
+    this.panZoom = new PanZoomHandler(this.container, svgEl, this.options)
 
     if (this.options.inspect) {
       this.inspectHandler = new InspectHandler(this.container, this.model, this.emitter)
