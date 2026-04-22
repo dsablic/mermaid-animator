@@ -9,6 +9,7 @@ export class InspectHandler {
   private popover: HTMLElement | null = null
   private activeNode: GraphElement | null = null
   private hoverNode: GraphElement | null = null
+  private cleanups: (() => void)[] = []
 
   constructor(
     container: HTMLElement,
@@ -24,19 +25,16 @@ export class InspectHandler {
   private attachListeners(): void {
     for (const node of this.model.nodes) {
       node.el.style.cursor = 'pointer'
-      node.el.addEventListener('click', (e) => {
-        e.stopPropagation()
-        this.inspectNode(node)
-      })
-      node.el.addEventListener('mouseenter', () => {
-        if (this.activeNode) return
-        this.hoverNode = node
-        this.highlightConnected(node)
-      })
-      node.el.addEventListener('mouseleave', () => {
-        if (this.activeNode || this.hoverNode !== node) return
-        this.hoverNode = null
-        this.clearHighlight()
+      const onClick = (e: Event) => { e.stopPropagation(); this.inspectNode(node) }
+      const onEnter = () => { if (this.activeNode) return; this.hoverNode = node; this.highlightConnected(node) }
+      const onLeave = () => { if (this.activeNode || this.hoverNode !== node) return; this.hoverNode = null; this.clearHighlight() }
+      node.el.addEventListener('click', onClick)
+      node.el.addEventListener('mouseenter', onEnter)
+      node.el.addEventListener('mouseleave', onLeave)
+      this.cleanups.push(() => {
+        node.el.removeEventListener('click', onClick)
+        node.el.removeEventListener('mouseenter', onEnter)
+        node.el.removeEventListener('mouseleave', onLeave)
       })
     }
     this.container.addEventListener('click', this.dismiss)
@@ -119,19 +117,28 @@ export class InspectHandler {
     const popover = document.createElement('div')
     popover.className = 'ma-popover'
 
-    let html = `<div class="ma-popover-id">${node.id}</div>`
+    const idDiv = document.createElement('div')
+    idDiv.className = 'ma-popover-id'
+    idDiv.textContent = node.id
+    popover.appendChild(idDiv)
+
     if (node.label) {
-      html += `<div class="ma-popover-label">${node.label}</div>`
+      const labelDiv = document.createElement('div')
+      labelDiv.className = 'ma-popover-label'
+      labelDiv.textContent = node.label
+      popover.appendChild(labelDiv)
     }
 
     const connections: string[] = []
-    for (const id of node.connections.outgoing) connections.push(`-> ${id}`)
-    for (const id of node.connections.incoming) connections.push(`<- ${id}`)
+    for (const id of node.connections.outgoing) connections.push(`→ ${id}`)
+    for (const id of node.connections.incoming) connections.push(`← ${id}`)
     if (connections.length > 0) {
-      html += `<div class="ma-popover-connections">${connections.join('<br>')}</div>`
+      const connDiv = document.createElement('div')
+      connDiv.className = 'ma-popover-connections'
+      connDiv.textContent = connections.join('\n')
+      connDiv.style.whiteSpace = 'pre-line'
+      popover.appendChild(connDiv)
     }
-
-    popover.innerHTML = html
 
     const rect = this.container.getBoundingClientRect()
     const svgRect = node.el.getBoundingClientRect()
@@ -159,6 +166,8 @@ export class InspectHandler {
 
   destroy(): void {
     this.dismiss()
+    for (const cleanup of this.cleanups) cleanup()
+    this.cleanups.length = 0
     this.container.removeEventListener('click', this.dismiss)
   }
 }

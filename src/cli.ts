@@ -2,7 +2,7 @@ import { parseArgs } from 'node:util'
 import { readFileSync } from 'node:fs'
 import { writeFile } from 'node:fs/promises'
 import { createServer } from 'node:http'
-import { join, extname } from 'node:path'
+import { join, extname, resolve as resolvePath } from 'node:path'
 import puppeteer from 'puppeteer'
 
 const USAGE = `Usage: mermaid-animator <input.mmd> [options]
@@ -42,7 +42,12 @@ function startServer(rootDir: string): Promise<{ server: ReturnType<typeof creat
   return new Promise((resolve, reject) => {
     const server = createServer((req, res) => {
       const url = new URL(req.url ?? '/', 'http://localhost')
-      const filePath = join(rootDir, url.pathname === '/' ? 'index.html' : url.pathname)
+      const filePath = resolvePath(rootDir, url.pathname === '/' ? 'index.html' : '.' + url.pathname)
+      if (!filePath.startsWith(rootDir)) {
+        res.writeHead(403)
+        res.end('Forbidden')
+        return
+      }
       try {
         const content = readFileSync(filePath)
         const ext = extname(filePath)
@@ -54,7 +59,7 @@ function startServer(rootDir: string): Promise<{ server: ReturnType<typeof creat
       }
     })
     server.on('error', reject)
-    server.listen(0, () => {
+    server.listen(0, '127.0.0.1', () => {
       const addr = server.address()
       const port = typeof addr === 'object' && addr ? addr.port : 0
       resolve({ server, port })
