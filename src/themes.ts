@@ -32,11 +32,11 @@ export const darkTheme: Theme = {
   edgeColors: VIBRANT_PALETTE,
   dotGlowOpacity: 0.3,
   nodeStrokeWidth: 1.5,
-  nodeFillOpacity: 0.25,
-  nodeBorderDefault: '#8b8fa3',
-  clusterStrokeWidth: 1.5,
-  clusterFillOpacity: 0.15,
-  clusterBorderOpacity: 1,
+  nodeFillOpacity: 0.35,
+  nodeBorderDefault: '#4a4e69',
+  clusterStrokeWidth: 1,
+  clusterFillOpacity: 0.08,
+  clusterBorderOpacity: 0.5,
 }
 
 export const lightTheme: Theme = {

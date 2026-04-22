@@ -73,32 +73,23 @@ function isNodeInsideCluster(node: GraphElement, cluster: GraphElement): boolean
 
 export function styleNodes(model: GraphModel, theme: Theme = darkTheme): void {
   const colors = theme.edgeColors
-  const clusterColors = new Map<GraphElement, string>()
-  for (let i = 0; i < model.clusters.length; i++) {
-    clusterColors.set(model.clusters[i], colors[i % colors.length])
-  }
 
-  for (const [cluster, color] of clusterColors) {
+  for (const cluster of model.clusters) {
     const rect = cluster.el.querySelector('rect')
     if (rect) {
       rect.setAttribute('rx', '8')
       rect.setAttribute('ry', '8')
-      rect.style.stroke = color
+      rect.style.stroke = theme.nodeBorderDefault
       rect.style.strokeOpacity = String(theme.clusterBorderOpacity)
       rect.style.strokeWidth = String(theme.clusterStrokeWidth)
-      rect.style.fill = hexToMuted(color)
+      rect.style.fill = hexToMuted(theme.nodeBorderDefault)
       rect.style.fillOpacity = String(theme.clusterFillOpacity)
     }
   }
 
-  for (const node of model.nodes) {
-    let nodeColor = theme.nodeBorderDefault
-    for (const [cluster, color] of clusterColors) {
-      if (isNodeInsideCluster(node, cluster)) {
-        nodeColor = color
-        break
-      }
-    }
+  for (let i = 0; i < model.nodes.length; i++) {
+    const node = model.nodes[i]
+    const nodeColor = colors[i % colors.length]
 
     const shapes = node.el.querySelectorAll('rect, circle, ellipse, polygon')
     for (const shape of shapes) {
@@ -109,6 +100,7 @@ export function styleNodes(model: GraphModel, theme: Theme = darkTheme): void {
       }
       s.style.stroke = nodeColor
       s.style.strokeWidth = String(theme.nodeStrokeWidth)
+      s.style.fill = hexToMuted(nodeColor)
       s.style.fillOpacity = String(theme.nodeFillOpacity)
     }
   }
