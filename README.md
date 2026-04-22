@@ -54,6 +54,9 @@ npm install mermaid-animator mermaid
 const animator = await MermaidAnimator.create(container, code, {
   theme: 'dark',       // 'dark', 'light', or a custom Theme object
   mode: 'auto',        // 'auto' or 'stepped'
+  dotSpeed: 0.008,     // dot travel speed (higher = faster)
+  dotsPerEdge: 3,      // number of dots per edge
+  dotRadius: 3,        // dot size in SVG units
   stagger: 80,         // ms between element animations (stepped mode)
   duration: 300,       // ms per animation (stepped mode)
   easing: 'ease-out',  // CSS easing (stepped mode)

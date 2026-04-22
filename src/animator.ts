@@ -30,8 +30,7 @@ export function buildSequence(model: GraphModel, options: MermaidAnimatorOptions
     dotGroup.setAttribute('id', 'ma-dots')
     svgEl.appendChild(dotGroup)
 
-    const dotsPerEdge = 3
-    const dotRadius = 3
+    const { dotsPerEdge, dotRadius, dotSpeed } = options
     const spacing = 1 / dotsPerEdge
     const glowOpacity = theme.dotGlowOpacity
     const group = dotGroup
@@ -45,7 +44,7 @@ export function buildSequence(model: GraphModel, options: MermaidAnimatorOptions
         }
 
         frame++
-        const progress = (frame * 0.008) % 1
+        const progress = (frame * dotSpeed) % 1
         let markup = ''
 
         for (const geo of geometries) {

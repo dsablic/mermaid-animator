@@ -353,6 +353,54 @@
     .theme-dark .mode-label { color: #666; }
     .theme-light .mode-label { color: #999; }
 
+    .settings-row {
+      display: none;
+      gap: 20px;
+      padding: 8px 16px;
+      align-items: center;
+      flex-wrap: wrap;
+      font-size: 12px;
+    }
+
+    .settings-row.visible { display: flex; }
+
+    .theme-dark .settings-row {
+      background: #0a0a1a;
+      border-top: 1px solid #1a1a3a;
+    }
+
+    .theme-light .settings-row {
+      background: #f0f0f4;
+      border-top: 1px solid #e0e0e0;
+    }
+
+    .setting {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .setting label {
+      white-space: nowrap;
+    }
+
+    .theme-dark .setting label { color: #999; }
+    .theme-light .setting label { color: #666; }
+
+    .setting input[type="range"] {
+      width: 80px;
+      accent-color: #7c9aff;
+    }
+
+    .setting .value {
+      min-width: 28px;
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .theme-dark .setting .value { color: #bbb; }
+    .theme-light .setting .value { color: #444; }
+
     .toast {
       position: fixed;
       bottom: 20px;
@@ -430,8 +478,28 @@
       <div class="separator"></div>
       <button id="export-gif-btn" class="btn">Export GIF</button>
       <button id="share-btn" class="btn">Share</button>
+      <div class="separator"></div>
+      <button id="settings-btn" class="btn">Settings</button>
       <span class="mode-label">Mode:</span>
       <button id="mode-btn" class="btn">Auto</button>
+    </div>
+
+    <div id="settings-row" class="settings-row">
+      <div class="setting">
+        <label for="speed-slider">Speed</label>
+        <input type="range" id="speed-slider" min="1" max="20" value="8" step="1">
+        <span class="value" id="speed-value">8</span>
+      </div>
+      <div class="setting">
+        <label for="density-slider">Dots</label>
+        <input type="range" id="density-slider" min="1" max="8" value="3" step="1">
+        <span class="value" id="density-value">3</span>
+      </div>
+      <div class="setting">
+        <label for="size-slider">Size</label>
+        <input type="range" id="size-slider" min="1" max="8" value="3" step="1">
+        <span class="value" id="size-value">3</span>
+      </div>
     </div>
   </div>
 
@@ -563,6 +631,14 @@
   const shareBtn = document.getElementById('share-btn');
   const modeBtn = document.getElementById('mode-btn');
   const themeToggle = document.getElementById('theme-toggle');
+  const settingsBtn = document.getElementById('settings-btn');
+  const settingsRow = document.getElementById('settings-row');
+  const speedSlider = document.getElementById('speed-slider');
+  const speedValue = document.getElementById('speed-value');
+  const densitySlider = document.getElementById('density-slider');
+  const densityValue = document.getElementById('density-value');
+  const sizeSlider = document.getElementById('size-slider');
+  const sizeValue = document.getElementById('size-value');
   const toastEl = document.getElementById('toast');
 
   let animator = null;
@@ -660,7 +736,8 @@
 
       animator = await MermaidAnimator.create(diagramEl, code.trim(), {
         mode: currentMode,
-        theme: currentTheme
+        theme: currentTheme,
+        ...getDotOptions()
       });
 
       animator.on('step', (index, total) => {
@@ -816,6 +893,30 @@
       await runDiagram(editor.value);
     }
   });
+
+  settingsBtn.addEventListener('click', () => {
+    settingsRow.classList.toggle('visible');
+    settingsBtn.classList.toggle('btn-active');
+  });
+
+  function getDotOptions() {
+    return {
+      dotSpeed: parseInt(speedSlider.value) * 0.001,
+      dotsPerEdge: parseInt(densitySlider.value),
+      dotRadius: parseInt(sizeSlider.value)
+    };
+  }
+
+  function onSettingChange() {
+    speedValue.textContent = speedSlider.value;
+    densityValue.textContent = densitySlider.value;
+    sizeValue.textContent = sizeSlider.value;
+    if (editor.value.trim()) runDiagram(editor.value);
+  }
+
+  speedSlider.addEventListener('input', onSettingChange);
+  densitySlider.addEventListener('input', onSettingChange);
+  sizeSlider.addEventListener('input', onSettingChange);
 
   initTheme();
 

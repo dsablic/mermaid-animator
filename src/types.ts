@@ -13,6 +13,9 @@ export interface MermaidAnimatorOptions {
   minZoom: number
   maxZoom: number
   theme: string | Theme
+  dotSpeed: number
+  dotsPerEdge: number
+  dotRadius: number
   mermaid: Record<string, unknown>
 }
 
@@ -29,6 +32,9 @@ export const DEFAULT_OPTIONS: MermaidAnimatorOptions = {
   minZoom: 0.1,
   maxZoom: 5,
   theme: 'dark',
+  dotSpeed: 0.008,
+  dotsPerEdge: 3,
+  dotRadius: 3,
   mermaid: {}
 }
 
