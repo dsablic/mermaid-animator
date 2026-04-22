@@ -453,6 +453,7 @@
       <button id="fit-btn" class="btn">Fit</button>
       <div class="separator"></div>
       <button id="export-gif-btn" class="btn">Export GIF</button>
+      <button id="export-webm-btn" class="btn">Export WebM</button>
       <button id="share-btn" class="btn">Share</button>
       <div class="separator"></div>
       <button id="settings-btn" class="btn">Settings</button>
@@ -598,6 +599,7 @@
   const errorEl = document.getElementById('error');
   const fitBtn = document.getElementById('fit-btn');
   const exportGifBtn = document.getElementById('export-gif-btn');
+  const exportWebmBtn = document.getElementById('export-webm-btn');
   const shareBtn = document.getElementById('share-btn');
   const themeToggle = document.getElementById('theme-toggle');
   const settingsBtn = document.getElementById('settings-btn');
@@ -785,6 +787,34 @@
     } finally {
       exportGifBtn.disabled = false;
       exportGifBtn.textContent = 'Export GIF';
+    }
+  });
+
+  exportWebmBtn.addEventListener('click', async () => {
+    const code = editor.value.trim();
+    if (!code) return;
+
+    exportWebmBtn.disabled = true;
+    exportWebmBtn.textContent = 'Exporting...';
+    clearError();
+
+    try {
+      const { exportVideo } = await import('../dist/mermaid-animator-export.js');
+      const blob = await exportVideo(code, {
+        theme: currentTheme
+      });
+
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'diagram.webm';
+      link.click();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      showError(String(err.message || err));
+    } finally {
+      exportWebmBtn.disabled = false;
+      exportWebmBtn.textContent = 'Export WebM';
     }
   });
 

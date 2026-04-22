@@ -148,7 +148,7 @@ Requires `puppeteer` to be installed (`npm install puppeteer`).
 
 ### GIF Export
 
-Export animated diagrams as GIF files with traveling dots. Available as a separate import to keep the main bundle small.
+Export animated diagrams as GIF files with traveling dots. GIF and WebM export are available as a separate import to keep the main bundle small.
 
 ```js
 import { exportGif } from 'mermaid-animator/export'
@@ -183,6 +183,30 @@ a.click()
 | `dotRadius` | 3 | Dot radius in SVG units |
 | `background` | from theme | Background color (overrides theme) |
 | `mermaid` | `{}` | Extra options passed to mermaid.initialize() |
+
+### WebM Video Export
+
+Export as WebM video — much smaller files than GIF with full color. Uses the browser's MediaRecorder API (browser-only, not available in Node/CLI).
+
+```js
+import { exportVideo } from 'mermaid-animator/export'
+
+const blob = await exportVideo(`graph TD
+  A[Start] --> B{Decision}
+  B -->|Yes| C[Process]
+  B -->|No| D[End]
+  C --> D`, {
+  theme: 'dark'
+})
+
+const url = URL.createObjectURL(blob)
+const a = document.createElement('a')
+a.href = url
+a.download = 'diagram.webm'
+a.click()
+```
+
+Accepts the same options as `exportGif`, plus `videoBitsPerSecond` (default: 2,000,000).
 
 ### Keyboard Shortcuts
 
