@@ -1,6 +1,6 @@
 {
   "name": "mermaid-animator",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "description": "Animated, interactive Mermaid.js diagram viewer with pan, zoom, and click-to-inspect",
   "type": "module",
   "license": "MIT",
