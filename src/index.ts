@@ -90,9 +90,7 @@ export class MermaidAnimator {
       panZoom: this.panZoom
     })
 
-    this.emitter.emit('animationStart')
-    await this.sequence.play()
-    this.emitter.emit('animationEnd')
+    this.sequence.play()
   }
 
   private buildConnections(): void {

@@ -52,7 +52,5 @@ export interface GraphModel {
 }
 
 export interface AnimatorEvents {
-  animationStart: []
-  animationEnd: []
   nodeClick: [node: GraphElement]
 }
