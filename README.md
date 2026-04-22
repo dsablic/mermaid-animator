@@ -103,7 +103,6 @@ import type { Theme } from 'mermaid-animator'
 ### Methods
 
 ```js
-animator.replay()           // restart dot animation
 animator.fitToView()        // reset zoom/pan
 animator.update(newCode)    // re-render with new Mermaid code
 animator.inspect('nodeId')  // programmatically inspect a node
@@ -113,8 +112,6 @@ animator.destroy()          // cleanup
 ### Events
 
 ```js
-animator.on('animationStart', () => {})
-animator.on('animationEnd', () => {})
 animator.on('nodeClick', (node) => {})
 ```
 
@@ -193,7 +190,6 @@ a.click()
 |-----|--------|
 | + / - | Zoom in / out |
 | 0 | Fit to view |
-| R | Replay |
 | Escape | Dismiss popover |
 
 ### UMD / Script Tag

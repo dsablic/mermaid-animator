@@ -78,7 +78,6 @@ export class MermaidAnimator {
     }
 
     this.keyboard = new KeyboardHandler({
-      onReplay: () => this.replay(),
       onFitToView: () => this.fitToView(),
       onDismiss: () => this.inspectHandler?.dismiss(),
       panZoom: this.panZoom
@@ -161,14 +160,6 @@ export class MermaidAnimator {
         n.id.includes(partial) ||
         nodeDataId.includes(partial)
     })
-  }
-
-  async replay(): Promise<void> {
-    if (!this.sequence || !this.model) return
-    this.sequence.cancel()
-    this.emitter.emit('animationStart')
-    await this.sequence.play()
-    this.emitter.emit('animationEnd')
   }
 
   fitToView(): void {

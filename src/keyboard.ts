@@ -1,7 +1,6 @@
 import type { PanZoomHandler } from './pan-zoom.js'
 
 export interface KeyboardCallbacks {
-  onReplay: () => void
   onFitToView: () => void
   onDismiss: () => void
   panZoom: PanZoomHandler | null
@@ -32,11 +31,6 @@ export class KeyboardHandler {
         break
       case 'Escape':
         this.callbacks.onDismiss()
-        break
-      case 'r':
-      case 'R':
-        e.preventDefault()
-        this.callbacks.onReplay()
         break
     }
   }

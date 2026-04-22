@@ -45,6 +45,7 @@ GIF export (`src/export.ts`) uses the same `dots.ts` to render frames, then enco
 - Run `npm test` to verify nothing is broken
 - Run `npm run generate-examples` after changes to export/rendering to update example GIFs
 - Keep `README.md` in sync with code — update docs when adding/changing features or options
+- The playground (https://dsablic.github.io/mermaid-animator/demo/) loads from the npm CDN — publish a new version to update it
 
 ## Conventions
 
