@@ -490,9 +490,7 @@
 </script>
 
 <script type="module">
-  const LOCAL = '../dist/mermaid-animator.js';
-  const CDN = 'https://cdn.jsdelivr.net/npm/mermaid-animator/dist/mermaid-animator.js';
-  const { MermaidAnimator } = await import(LOCAL).catch(() => import(CDN));
+  const { MermaidAnimator } = await import('../dist/mermaid-animator.js');
 
   const EXAMPLES = {
     flowchart: `graph TD
@@ -746,9 +744,7 @@
     clearError();
 
     try {
-      const localExport = '../dist/mermaid-animator-export.js';
-      const cdnExport = 'https://cdn.jsdelivr.net/npm/mermaid-animator/dist/mermaid-animator-export.js';
-      const { exportGif } = await import(localExport).catch(() => import(cdnExport));
+      const { exportGif } = await import('../dist/mermaid-animator-export.js');
       const gifBytes = await exportGif(code, {
         theme: currentTheme
       });
