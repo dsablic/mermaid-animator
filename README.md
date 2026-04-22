@@ -2,6 +2,8 @@
 
 Animated, interactive Mermaid.js diagram viewer. Renders Mermaid code as a live SVG with colorized edges and glowing dots that travel along connections, plus pan, zoom, and click-to-inspect.
 
+**[Try the playground](https://dsablic.github.io/mermaid-animator/demo/)**
+
 Supports all Mermaid diagram types: flowcharts, sequence diagrams, class diagrams, state diagrams, ER diagrams, and more.
 
 <p align="center">
