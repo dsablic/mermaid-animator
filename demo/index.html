@@ -616,25 +616,30 @@
   let currentTheme = 'dark';
   let debounceTimer = null;
 
+  let userOverride = false;
+
   function setTheme(theme) {
     currentTheme = theme;
     document.body.className = `theme-${theme}`;
     themeToggle.textContent = theme === 'dark' ? '☀️' : '🌙';
-    localStorage.setItem('ma-theme', theme);
+  }
+
+  function getOsTheme() {
+    return window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
   }
 
   function initTheme() {
-    const saved = localStorage.getItem('ma-theme');
-    if (saved) {
-      setTheme(saved);
-    } else if (window.matchMedia('(prefers-color-scheme: light)').matches) {
-      setTheme('light');
-    } else {
-      setTheme('dark');
-    }
+    setTheme(getOsTheme());
+    window.matchMedia('(prefers-color-scheme: light)').addEventListener('change', () => {
+      if (!userOverride) {
+        setTheme(getOsTheme());
+        if (editor.value.trim()) runDiagram(editor.value);
+      }
+    });
   }
 
   themeToggle.addEventListener('click', () => {
+    userOverride = true;
     setTheme(currentTheme === 'dark' ? 'light' : 'dark');
     if (editor.value.trim()) runDiagram(editor.value);
   });
