@@ -90,6 +90,11 @@ MermaidAnimator.create(container, code, {
     clusterStrokeWidth: 1.5,
     clusterFillOpacity: 0.1,
     clusterBorderOpacity: 0.8,
+    popoverBackground: '#0f172a',
+    popoverText: '#e2e8f0',
+    popoverBorder: '#334155',
+    popoverIdColor: '#38bdf8',
+    popoverSecondaryText: '#94a3b8',
   }
 })
 ```
@@ -210,6 +215,8 @@ Accepts the same options as `exportGif`, plus `videoBitsPerSecond` (default: 2,0
 
 ### Keyboard Shortcuts
 
+Keyboard shortcuts are active when the diagram container has focus (click the diagram first).
+
 | Key | Action |
 |-----|--------|
 | + / - | Zoom in / out |
@@ -222,11 +229,14 @@ Accepts the same options as `exportGif`, plus `videoBitsPerSecond` (default: 2,0
 <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/mermaid-animator/dist/mermaid-animator.umd.js"></script>
 <script>
-  MermaidAnimator.MermaidAnimator.create(container, code)
+  const { MermaidAnimator } = MermaidAnimatorLib
+  MermaidAnimator.create(container, code)
 </script>
 ```
 
 ## Development
+
+Requires Node.js >= 22.
 
 ```bash
 git clone https://github.com/dsablic/mermaid-animator.git

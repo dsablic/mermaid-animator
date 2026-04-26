@@ -72,7 +72,8 @@ export class PanZoomHandler {
 
   private onWheel = (e: WheelEvent): void => {
     e.preventDefault()
-    const zoomFactor = e.deltaY > 0 ? 1.1 : 0.9
+    const ZOOM_STEP = 1.1
+    const zoomFactor = e.deltaY > 0 ? ZOOM_STEP : 1 / ZOOM_STEP
     const newZoom = this.currentZoom * zoomFactor
 
     if (newZoom < this.options.minZoom || newZoom > this.options.maxZoom) return

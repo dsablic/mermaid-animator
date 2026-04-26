@@ -1,6 +1,6 @@
 declare module 'gifenc' {
   interface GIFEncoderInstance {
-    writeFrame(index: Uint8Array, width: number, height: number, opts?: { palette?: number[][]; delay?: number }): void
+    writeFrame(index: Uint8Array, width: number, height: number, opts?: { palette?: number[][]; delay?: number; repeat?: number }): void
     finish(): void
     bytes(): Uint8Array
   }

@@ -698,6 +698,7 @@
 
       animator = await MermaidAnimator.create(diagramEl, code.trim(), {
         theme: currentTheme,
+        mermaid: { securityLevel: 'strict' },
         ...getDotOptions()
       });
 

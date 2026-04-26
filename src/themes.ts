@@ -10,6 +10,11 @@ export interface Theme {
   clusterStrokeWidth: number
   clusterFillOpacity: number
   clusterBorderOpacity: number
+  popoverBackground: string
+  popoverText: string
+  popoverBorder: string
+  popoverIdColor: string
+  popoverSecondaryText: string
 }
 
 const VIBRANT_PALETTE = [
@@ -37,6 +42,11 @@ export const darkTheme: Theme = {
   clusterStrokeWidth: 1,
   clusterFillOpacity: 0.08,
   clusterBorderOpacity: 0.5,
+  popoverBackground: '#1a1a2e',
+  popoverText: '#e0e0e0',
+  popoverBorder: '#333',
+  popoverIdColor: '#7c9aff',
+  popoverSecondaryText: '#aaa',
 }
 
 export const lightTheme: Theme = {
@@ -62,6 +72,11 @@ export const lightTheme: Theme = {
   clusterStrokeWidth: 1.5,
   clusterFillOpacity: 0.06,
   clusterBorderOpacity: 0.8,
+  popoverBackground: '#ffffff',
+  popoverText: '#1a1a2e',
+  popoverBorder: '#d1d5db',
+  popoverIdColor: '#2563eb',
+  popoverSecondaryText: '#6b7280',
 }
 
 const builtInThemes: Record<string, Theme> = {

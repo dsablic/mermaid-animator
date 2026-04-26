@@ -2,12 +2,14 @@ import mermaid from 'mermaid'
 import type { Theme } from './themes.js'
 import { resolveTheme } from './themes.js'
 import { discoverElements } from './discovery.js'
-import { renderSvgToImageData } from './capture.js'
+import { renderSvgToImageData, loadSvgAsImage } from './capture.js'
 import { encodeGif } from './gif-encoder.js'
 import type { FrameData } from './gif-encoder.js'
 import { collectEdgeGeometries, styleNodes, type EdgeGeometry } from './dots.js'
 
 export type { Theme }
+
+let exportIdCounter = 0
 
 export interface ExportOptions {
   width?: number
@@ -58,12 +60,26 @@ async function setupRender(code: string, options: ExportOptions = {}): Promise<R
   container.style.left = '-9999px'
   document.body.appendChild(container)
 
-  mermaid.initialize({ startOnLoad: false, theme: resolvedTheme.mermaidTheme as 'dark' | 'default', ...mermaidOptions })
-  const id = `ma-export-${Date.now()}`
+  const mermaidConfig = { ...mermaidOptions }
+  if (!('securityLevel' in mermaidConfig)) {
+    mermaidConfig.securityLevel = 'strict'
+  }
+  mermaid.initialize({ startOnLoad: false, theme: resolvedTheme.mermaidTheme as Parameters<typeof mermaid.initialize>[0]['theme'], ...mermaidConfig })
+  const id = `ma-export-${Date.now()}-${exportIdCounter++}`
   const { svg } = await mermaid.render(id, code)
-  container.innerHTML = svg
 
-  const svgEl = container.querySelector('svg')!
+  const parser = new DOMParser()
+  const doc = parser.parseFromString(svg, 'text/html')
+  const parsedSvg = doc.body.querySelector('svg')
+  container.innerHTML = ''
+  if (parsedSvg) {
+    container.appendChild(document.adoptNode(parsedSvg))
+  } else {
+    container.innerHTML = svg
+  }
+
+  const svgEl = container.querySelector('svg')
+  if (!svgEl) throw new Error('Mermaid did not produce an SVG element during export')
 
   const vb = svgEl.viewBox?.baseVal
   let outWidth = width
@@ -119,7 +135,7 @@ function renderDotsMarkup(ctx: RenderContext, progress: number): string {
 
 export async function exportGif(
   code: string,
-  options: GifExportOptions = {}
+  options: ExportOptions = {}
 ): Promise<Uint8Array> {
   const { fps = 12, totalFrames = 60 } = options
   const delay = Math.round(1000 / fps)
@@ -152,7 +168,8 @@ export async function exportVideo(
     const canvas = document.createElement('canvas')
     canvas.width = ctx.outWidth
     canvas.height = ctx.outHeight
-    const canvasCtx = canvas.getContext('2d')!
+    const canvasCtx = canvas.getContext('2d')
+    if (!canvasCtx) throw new Error('Failed to get 2d context from canvas')
 
     const stream = canvas.captureStream(0)
     const recorder = new MediaRecorder(stream, {
@@ -173,18 +190,7 @@ export async function exportVideo(
     for (let f = 0; f < totalFrames; f++) {
       ctx.dotGroup.innerHTML = renderDotsMarkup(ctx, f / totalFrames)
 
-      const serializer = new XMLSerializer()
-      const svgString = serializer.serializeToString(ctx.svgEl)
-      const url = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svgString)}`
-
-      const img = new Image()
-      img.width = ctx.outWidth
-      img.height = ctx.outHeight
-      await new Promise<void>((resolve, reject) => {
-        img.onload = () => resolve()
-        img.onerror = reject
-        img.src = url
-      })
+      const img = await loadSvgAsImage(ctx.svgEl, ctx.outWidth, ctx.outHeight)
 
       canvasCtx.fillStyle = ctx.background
       canvasCtx.fillRect(0, 0, ctx.outWidth, ctx.outHeight)

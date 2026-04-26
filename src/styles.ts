@@ -1,6 +1,43 @@
+import type { Theme } from './themes.js'
+
 const STYLE_ID = 'mermaid-animator-styles'
 
-const CSS = `
+export function buildPopoverCss(theme: Theme): string {
+  return `
+.ma-popover {
+  position: absolute;
+  background: ${theme.popoverBackground};
+  color: ${theme.popoverText};
+  border: 1px solid ${theme.popoverBorder};
+  border-radius: 6px;
+  padding: 10px 14px;
+  font-family: system-ui, -apple-system, sans-serif;
+  font-size: 13px;
+  line-height: 1.5;
+  max-width: 280px;
+  pointer-events: none;
+  z-index: 1000;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+
+.ma-popover-id {
+  font-weight: 600;
+  margin-bottom: 4px;
+  color: ${theme.popoverIdColor};
+}
+
+.ma-popover-label {
+  margin-bottom: 6px;
+}
+
+.ma-popover-connections {
+  font-size: 12px;
+  color: ${theme.popoverSecondaryText};
+}
+`
+}
+
+const BASE_CSS = `
 .ma-container {
   position: relative;
   overflow: hidden;
@@ -27,43 +64,24 @@ const CSS = `
 .ma-hidden {
   opacity: 0;
 }
-
-.ma-popover {
-  position: absolute;
-  background: #1a1a2e;
-  color: #e0e0e0;
-  border: 1px solid #333;
-  border-radius: 6px;
-  padding: 10px 14px;
-  font-family: system-ui, -apple-system, sans-serif;
-  font-size: 13px;
-  line-height: 1.5;
-  max-width: 280px;
-  pointer-events: none;
-  z-index: 1000;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-}
-
-.ma-popover-id {
-  font-weight: 600;
-  margin-bottom: 4px;
-  color: #7c9aff;
-}
-
-.ma-popover-label {
-  margin-bottom: 6px;
-}
-
-.ma-popover-connections {
-  font-size: 12px;
-  color: #aaa;
-}
 `
 
 export function injectStyles(): void {
   if (document.getElementById(STYLE_ID)) return
   const style = document.createElement('style')
   style.id = STYLE_ID
-  style.textContent = CSS
+  style.textContent = BASE_CSS
   document.head.appendChild(style)
+}
+
+const POPOVER_STYLE_ID = 'mermaid-animator-popover-styles'
+
+export function injectPopoverStyles(theme: Theme): void {
+  let style = document.getElementById(POPOVER_STYLE_ID) as HTMLStyleElement | null
+  if (!style) {
+    style = document.createElement('style')
+    style.id = POPOVER_STYLE_ID
+    document.head.appendChild(style)
+  }
+  style.textContent = buildPopoverCss(theme)
 }

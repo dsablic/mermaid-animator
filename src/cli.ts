@@ -1,8 +1,8 @@
 import { parseArgs } from 'node:util'
-import { readFileSync } from 'node:fs'
+import { readFileSync, realpathSync } from 'node:fs'
 import { writeFile } from 'node:fs/promises'
 import { createServer } from 'node:http'
-import { join, extname, resolve as resolvePath } from 'node:path'
+import { join, extname, resolve as resolvePath, parse as parsePath } from 'node:path'
 import puppeteer from 'puppeteer'
 
 const USAGE = `Usage: mermaid-animator <input.mmd> [options]
@@ -27,7 +27,7 @@ const MIME_TYPES: Record<string, string> = {
 
 function findPackageRoot(): string {
   let dir = import.meta.dirname
-  while (dir !== '/') {
+  while (parsePath(dir).root !== dir) {
     try {
       readFileSync(join(dir, 'package.json'))
       return dir
@@ -42,8 +42,15 @@ function startServer(rootDir: string): Promise<{ server: ReturnType<typeof creat
   return new Promise((resolve, reject) => {
     const server = createServer((req, res) => {
       const url = new URL(req.url ?? '/', 'http://localhost')
-      const filePath = resolvePath(rootDir, url.pathname === '/' ? 'index.html' : '.' + url.pathname)
-      if (!filePath.startsWith(rootDir)) {
+      let filePath: string
+      try {
+        filePath = realpathSync(resolvePath(rootDir, url.pathname === '/' ? 'index.html' : '.' + url.pathname))
+      } catch {
+        res.writeHead(404)
+        res.end('Not found')
+        return
+      }
+      if (!filePath.startsWith(realpathSync(rootDir))) {
         res.writeHead(403)
         res.end('Forbidden')
         return
@@ -112,6 +119,20 @@ async function main() {
     process.exit(1)
   }
 
+  function parsePositiveInt(value: string, name: string): number {
+    const n = parseInt(value, 10)
+    if (isNaN(n) || n <= 0) {
+      console.error(`Error: ${name} must be a positive integer, got "${value}"`)
+      return process.exit(1)
+    }
+    return n
+  }
+
+  const width = parsePositiveInt(values.width!, '--width')
+  const height = parsePositiveInt(values.height!, '--height')
+  const fps = parsePositiveInt(values.fps!, '--fps')
+  const frames = parsePositiveInt(values.frames!, '--frames')
+
   const rootDir = findPackageRoot()
   const { server, port } = await startServer(rootDir)
 
@@ -137,10 +158,10 @@ async function main() {
       },
       code,
       values.theme!,
-      parseInt(values.width!),
-      parseInt(values.height!),
-      parseInt(values.fps!),
-      parseInt(values.frames!)
+      width,
+      height,
+      fps,
+      frames
     )
 
     const buf = Buffer.from(gifBytes)

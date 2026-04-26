@@ -7,11 +7,13 @@ import { buildSequence, type AnimationSequence } from './animator.js'
 import { PanZoomHandler } from './pan-zoom.js'
 import { InspectHandler } from './inspect.js'
 import { KeyboardHandler } from './keyboard.js'
-import { injectStyles } from './styles.js'
+import { injectStyles, injectPopoverStyles } from './styles.js'
 import { resolveTheme } from './themes.js'
 export type { Theme } from './themes.js'
 
 export type { PartialOptions, MermaidAnimatorOptions, GraphModel, GraphElement, AnimatorEvents }
+
+let idCounter = 0
 
 export class MermaidAnimator {
   private container: HTMLElement
@@ -34,6 +36,9 @@ export class MermaidAnimator {
     options?: PartialOptions
   ): Promise<MermaidAnimator> {
     const merged = { ...DEFAULT_OPTIONS, ...options }
+    if (merged.dotsPerEdge < 1) merged.dotsPerEdge = 1
+    if (merged.dotRadius <= 0) merged.dotRadius = DEFAULT_OPTIONS.dotRadius
+    if (merged.dotSpeed <= 0) merged.dotSpeed = DEFAULT_OPTIONS.dotSpeed
     const instance = new MermaidAnimator(container, merged)
     await instance.render(code)
     return instance
@@ -41,54 +46,79 @@ export class MermaidAnimator {
 
   private async render(code: string): Promise<void> {
     injectStyles()
-    this.cleanup()
 
+    const previousContent = this.container.innerHTML
+    const hadClass = this.container.classList.contains('ma-container')
+
+    this.cleanup()
     this.container.classList.add('ma-container')
 
-    const theme = resolveTheme(this.options.theme)
-    mermaid.initialize({
-      startOnLoad: false,
-      theme: theme.mermaidTheme as 'dark' | 'default',
-      ...this.options.mermaid
-    })
+    try {
+      const theme = resolveTheme(this.options.theme)
+      injectPopoverStyles(theme)
+      const mermaidConfig = { ...this.options.mermaid }
+      if (!('securityLevel' in mermaidConfig)) {
+        mermaidConfig.securityLevel = 'strict'
+      }
+      mermaid.initialize({
+        startOnLoad: false,
+        theme: theme.mermaidTheme as Parameters<typeof mermaid.initialize>[0]['theme'],
+        ...mermaidConfig
+      })
 
-    const id = `ma-${Date.now()}`
-    const { svg } = await mermaid.render(id, code)
-    this.container.innerHTML = svg
+      const id = `ma-${Date.now()}-${idCounter++}`
+      const { svg } = await mermaid.render(id, code)
 
-    const svgEl = this.container.querySelector('svg')
-    if (!svgEl) throw new Error('Mermaid did not produce an SVG element')
+      const parser = new DOMParser()
+      const doc = parser.parseFromString(svg, 'text/html')
+      const parsedSvg = doc.body.querySelector('svg')
+      this.container.innerHTML = ''
+      if (parsedSvg) {
+        this.container.appendChild(document.adoptNode(parsedSvg))
+      } else {
+        this.container.innerHTML = svg
+      }
 
-    const vb = svgEl.viewBox.baseVal
-    if (!vb.width || !vb.height) {
-      const w = svgEl.getAttribute('width') ?? svgEl.getBoundingClientRect().width
-      const h = svgEl.getAttribute('height') ?? svgEl.getBoundingClientRect().height
-      svgEl.setAttribute('viewBox', `0 0 ${w} ${h}`)
+      const svgEl = this.container.querySelector('svg')
+      if (!svgEl) throw new Error('Mermaid did not produce an SVG element')
+
+      const vb = svgEl.viewBox.baseVal
+      if (!vb.width || !vb.height) {
+        const w = svgEl.getAttribute('width') ?? svgEl.getBoundingClientRect().width
+        const h = svgEl.getAttribute('height') ?? svgEl.getBoundingClientRect().height
+        svgEl.setAttribute('viewBox', `0 0 ${w} ${h}`)
+      }
+
+      svgEl.removeAttribute('width')
+      svgEl.removeAttribute('height')
+      svgEl.style.maxWidth = 'none'
+      svgEl.setAttribute('overflow', 'visible')
+
+      this.model = discoverElements(svgEl)
+      this.buildConnections()
+
+      this.sequence = buildSequence(this.model, this.options, theme)
+
+      this.panZoom = new PanZoomHandler(this.container, svgEl, this.options)
+
+      if (this.options.inspect) {
+        this.inspectHandler = new InspectHandler(this.container, this.model, this.emitter)
+      }
+
+      this.keyboard = new KeyboardHandler({
+        onFitToView: () => this.fitToView(),
+        onDismiss: () => this.inspectHandler?.dismiss(),
+        panZoom: this.panZoom,
+        container: this.container
+      })
+
+      this.sequence.play()
+    } catch (error) {
+      this.cleanup()
+      this.container.innerHTML = previousContent
+      if (!hadClass) this.container.classList.remove('ma-container')
+      throw error
     }
-
-    svgEl.removeAttribute('width')
-    svgEl.removeAttribute('height')
-    svgEl.style.maxWidth = 'none'
-    svgEl.setAttribute('overflow', 'visible')
-
-    this.model = discoverElements(svgEl)
-    this.buildConnections()
-
-    this.sequence = buildSequence(this.model, this.options, theme)
-
-    this.panZoom = new PanZoomHandler(this.container, svgEl, this.options)
-
-    if (this.options.inspect) {
-      this.inspectHandler = new InspectHandler(this.container, this.model, this.emitter)
-    }
-
-    this.keyboard = new KeyboardHandler({
-      onFitToView: () => this.fitToView(),
-      onDismiss: () => this.inspectHandler?.dismiss(),
-      panZoom: this.panZoom
-    })
-
-    this.sequence.play()
   }
 
   private buildConnections(): void {
@@ -150,6 +180,10 @@ export class MermaidAnimator {
         if (!target.connections.incoming.includes(source.id)) {
           target.connections.incoming.push(source.id)
         }
+      } else {
+        console.warn(
+          `[mermaid-animator] Could not resolve edge "${edge.id}" (data-id="${dataId}") to source/target nodes`
+        )
       }
     }
   }
@@ -158,10 +192,9 @@ export class MermaidAnimator {
     if (!this.model) return undefined
     return this.model.nodes.find(n => {
       const nodeDataId = n.el.getAttribute('data-id') ?? ''
-      return n.id === partial ||
-        nodeDataId === partial ||
-        n.id.includes(partial) ||
-        nodeDataId.includes(partial)
+      if (n.id === partial || nodeDataId === partial) return true
+      const idSuffix = `-${partial}`
+      return n.id.endsWith(idSuffix) || nodeDataId.endsWith(idSuffix)
     })
   }
 
@@ -175,7 +208,7 @@ export class MermaidAnimator {
 
   inspect(nodeId: string): void {
     if (!this.model || !this.inspectHandler) return
-    const node = this.model.nodes.find(n => n.id === nodeId || n.id.includes(nodeId))
+    const node = this.model.nodes.find(n => n.id === nodeId || n.id.endsWith(`-${nodeId}`))
     if (node) this.inspectHandler.inspectNode(node)
   }
 

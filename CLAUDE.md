@@ -6,6 +6,7 @@ TypeScript library that renders Mermaid.js diagrams as animated, interactive SVG
 
 - `src/` - Library source (TypeScript, zero framework dependencies beyond Mermaid)
 - `src/dots.ts` - Shared edge colorization and dot geometry (used by both live animation and GIF export)
+- `src/capture.ts` - SVG-to-image rendering helpers (shared by GIF and WebM export)
 - `src/export.ts` - GIF export entry point (separate bundle: `mermaid-animator/export`)
 - `src/cli.ts` - CLI entry point (`mermaid-animator` command)
 - `test/` - Unit tests (node:test + jsdom)
@@ -32,7 +33,7 @@ TypeScript library that renders Mermaid.js diagrams as animated, interactive SVG
 
 1. Mermaid renders code to SVG
 2. `discovery.ts` parses SVG elements by CSS class and data attributes into a graph model
-3. `ordering.ts` computes animation order (topological or spatial)
+3. `index.ts` resolves edge-to-node connections via data attributes and ID matching
 4. `dots.ts` colorizes edges and computes dot geometries along paths
 5. `animator.ts` runs continuous traveling dot animation via requestAnimationFrame
 6. `pan-zoom.ts`, `inspect.ts`, `keyboard.ts` attach interaction handlers

@@ -30,18 +30,29 @@ function resolveTransform(el: Element): { tx: number; ty: number } {
   return { tx, ty }
 }
 
+function normalizeHex(hex: string): string {
+  if (hex.length === 4 && hex[0] === '#') {
+    return `#${hex[1]}${hex[1]}${hex[2]}${hex[2]}${hex[3]}${hex[3]}`
+  }
+  return hex
+}
+
 export function hexToGlow(hex: string): string {
-  const r = parseInt(hex.slice(1, 3), 16)
-  const g = parseInt(hex.slice(3, 5), 16)
-  const b = parseInt(hex.slice(5, 7), 16)
+  const h = normalizeHex(hex)
+  const r = parseInt(h.slice(1, 3), 16)
+  const g = parseInt(h.slice(3, 5), 16)
+  const b = parseInt(h.slice(5, 7), 16)
+  if (isNaN(r) || isNaN(g) || isNaN(b)) return hex
   const lighten = (v: number) => Math.min(255, Math.round(v + (255 - v) * 0.4))
   return `#${lighten(r).toString(16).padStart(2, '0')}${lighten(g).toString(16).padStart(2, '0')}${lighten(b).toString(16).padStart(2, '0')}`
 }
 
 function hexToMuted(hex: string): string {
-  const r = parseInt(hex.slice(1, 3), 16)
-  const g = parseInt(hex.slice(3, 5), 16)
-  const b = parseInt(hex.slice(5, 7), 16)
+  const h = normalizeHex(hex)
+  const r = parseInt(h.slice(1, 3), 16)
+  const g = parseInt(h.slice(3, 5), 16)
+  const b = parseInt(h.slice(5, 7), 16)
+  if (isNaN(r) || isNaN(g) || isNaN(b)) return hex
   const mute = (v: number) => Math.round(v * 0.3)
   return `#${mute(r).toString(16).padStart(2, '0')}${mute(g).toString(16).padStart(2, '0')}${mute(b).toString(16).padStart(2, '0')}`
 }
@@ -60,15 +71,6 @@ export function colorizeEdge(edge: GraphElement, color: string): void {
   for (const l of lines) {
     (l as SVGElement).style.stroke = color
   }
-}
-
-function isNodeInsideCluster(node: GraphElement, cluster: GraphElement): boolean {
-  let current: Element | null = node.el.parentElement
-  while (current && current instanceof SVGElement && current.tagName !== 'svg') {
-    if (current === cluster.el) return true
-    current = current.parentElement
-  }
-  return false
 }
 
 export function styleNodes(model: GraphModel, theme: Theme = darkTheme): void {

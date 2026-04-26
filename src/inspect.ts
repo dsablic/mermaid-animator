@@ -10,6 +10,7 @@ export class InspectHandler {
   private activeNode: GraphElement | null = null
   private hoverNode: GraphElement | null = null
   private cleanups: (() => void)[] = []
+  private nodeIndex: Map<string, GraphElement>
 
   constructor(
     container: HTMLElement,
@@ -19,6 +20,12 @@ export class InspectHandler {
     this.container = container
     this.model = model
     this.emitter = emitter
+    this.nodeIndex = new Map()
+    for (const node of model.nodes) {
+      this.nodeIndex.set(node.id, node)
+      const dataId = node.el.getAttribute('data-id')
+      if (dataId) this.nodeIndex.set(dataId, node)
+    }
     this.attachListeners()
   }
 
@@ -83,7 +90,7 @@ export class InspectHandler {
     const dataTo = edge.el.getAttribute('data-to')
     if (dataFrom && dataTo) {
       for (const nodeId of connectedNodes) {
-        const node = this.model.nodes.find(n => n.id === nodeId)
+        const node = this.nodeIndex.get(nodeId)
         const nodeDataId = node?.el.getAttribute('data-id') ?? ''
         if (nodeDataId === dataFrom || nodeDataId === dataTo) return true
       }
@@ -94,7 +101,7 @@ export class InspectHandler {
     if (underscoreMatch) {
       const [, srcPart, tgtPart] = underscoreMatch
       for (const nodeId of connectedNodes) {
-        const node = this.model.nodes.find(n => n.id === nodeId)
+        const node = this.nodeIndex.get(nodeId)
         const nodeDataId = node?.el.getAttribute('data-id') ?? ''
         if (nodeId.includes(srcPart) || nodeId.includes(tgtPart) ||
             nodeDataId.includes(srcPart) || nodeDataId.includes(tgtPart)) {
@@ -130,8 +137,8 @@ export class InspectHandler {
     }
 
     const connections: string[] = []
-    for (const id of node.connections.outgoing) connections.push(`→ ${id}`)
-    for (const id of node.connections.incoming) connections.push(`← ${id}`)
+    for (const id of node.connections.outgoing) connections.push(`\u2192 ${id}`)
+    for (const id of node.connections.incoming) connections.push(`\u2190 ${id}`)
     if (connections.length > 0) {
       const connDiv = document.createElement('div')
       connDiv.className = 'ma-popover-connections'

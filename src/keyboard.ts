@@ -4,14 +4,18 @@ export interface KeyboardCallbacks {
   onFitToView: () => void
   onDismiss: () => void
   panZoom: PanZoomHandler | null
+  container: HTMLElement
 }
 
 export class KeyboardHandler {
   private callbacks: KeyboardCallbacks
+  private container: HTMLElement
 
   constructor(callbacks: KeyboardCallbacks) {
     this.callbacks = callbacks
-    document.addEventListener('keydown', this.onKeyDown)
+    this.container = callbacks.container
+    this.container.setAttribute('tabindex', '0')
+    this.container.addEventListener('keydown', this.onKeyDown)
   }
 
   private onKeyDown = (e: KeyboardEvent): void => {
@@ -36,6 +40,6 @@ export class KeyboardHandler {
   }
 
   destroy(): void {
-    document.removeEventListener('keydown', this.onKeyDown)
+    this.container.removeEventListener('keydown', this.onKeyDown)
   }
 }
