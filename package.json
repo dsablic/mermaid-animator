@@ -44,7 +44,7 @@
   ],
   "scripts": {
     "build": "esbuild src/index.ts --bundle --format=esm --outfile=dist/mermaid-animator.js --external:mermaid",
-    "build:umd": "esbuild src/index.ts --bundle --format=iife --global-name=MermaidAnimatorLib --outfile=dist/mermaid-animator.umd.js --external:mermaid",
+    "build:umd": "esbuild src/index.ts --bundle --format=iife --global-name=MermaidAnimatorLib --outfile=dist/mermaid-animator.umd.js --alias:mermaid=./src/mermaid-global-shim.ts",
     "build:export": "esbuild src/export.ts --bundle --format=esm --outfile=dist/mermaid-animator-export.js --external:mermaid",
     "build:cli": "esbuild src/cli.ts --format=esm --platform=node --outfile=dist/cli.js --packages=external",
     "build:all": "npm run build && npm run build:umd && npm run build:export && npm run build:cli && tsc --emitDeclarationOnly",
